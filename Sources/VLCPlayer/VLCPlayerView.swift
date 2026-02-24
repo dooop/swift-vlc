@@ -19,6 +19,10 @@ import SwiftUI
   public struct VLCPlayerView: NSViewControllerRepresentable {
     public let player: VLCMediaPlayer
 
+    public init(player: VLCMediaPlayer) {
+      self.player = player
+    }
+
     public func makeNSViewController(context: Context) -> NSViewController {
       let viewController = NSViewController()
       player.drawable = viewController.view
@@ -33,6 +37,10 @@ import SwiftUI
   public struct VLCPlayerView: UIViewControllerRepresentable {
     public let player: VLCMediaPlayer
 
+    public init(player: VLCMediaPlayer) {
+      self.player = player
+    }
+
     public func makeUIViewController(context: Context) -> UIViewController {
       let viewController = UIViewController()
       player.drawable = viewController.view
@@ -46,5 +54,5 @@ import SwiftUI
 #endif
 
 #Preview {
-    VLCPlayerView(player: VLCMediaPlayer())
+  VLCPlayerView(player: VLCMediaPlayer())
 }
