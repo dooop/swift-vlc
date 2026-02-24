@@ -4,13 +4,17 @@ import PackageDescription
 let package = Package(
   name: "swift-vlc",
   platforms: [
-    .macOS(.v10_13), .iOS(.v12), .tvOS(.v12),
+    .macOS(.v10_15), .iOS(.v13), .tvOS(.v13),
   ],
   products: [
     .library(
       name: "VLC",
       targets: ["VLC"]
-    )
+    ),
+    .library(
+      name: "VLCPlayer",
+      targets: ["VLCPlayer"]
+    ),
   ],
   dependencies: [],
   targets: [
@@ -39,6 +43,10 @@ let package = Package(
         .linkedFramework("Foundation", .when(platforms: [.macOS])),
         .linkedLibrary("iconv"),
       ]
+    ),
+    .target(
+      name: "VLCPlayer",
+      dependencies: ["VLC"],
     ),
     .binaryTarget(
       name: "VLCKit",
