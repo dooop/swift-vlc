@@ -18,6 +18,8 @@ This package exposes:
 - `Sources/VLC`: re-export layer for the underlying VLCKit framework
 - `Sources/VLCPlayer`: SwiftUI wrapper view for `VLCMediaPlayer`
 - `Frameworks/*.xcframework`: local binary dependencies used by SwiftPM
+- `Scripts/update-vlc-frameworks.sh`: downloads/extracts/install VLCKit `xcframework`s
+- `Scripts/vlc-frameworks.conf`: configurable archive URLs and recorded SHA-256 checksums
 
 ## Requirements
 
@@ -31,6 +33,40 @@ Expected framework paths:
 - `Frameworks/TVVLCKit.xcframework`
 
 ## Installation
+
+### Fetch / refresh VLCKit frameworks
+
+This package uses local `binaryTarget(path:)` entries, so the `xcframework`s must exist in `Frameworks/` before building.
+
+Use the helper script to download and install them:
+
+```bash
+./Scripts/update-vlc-frameworks.sh
+```
+
+What it does:
+
+- reads `Scripts/vlc-frameworks.conf`
+- downloads each archive URL
+- extracts the matching `*.xcframework`
+- copies it into `Frameworks/`
+- updates the third config column with the archive SHA-256 checksum
+
+Config file format:
+
+```text
+<framework-name>|<archive-url>|<sha256>
+```
+
+Optional usage:
+
+```bash
+# Use a different config file
+./Scripts/update-vlc-frameworks.sh /path/to/vlc-frameworks.conf
+
+# Override the destination Frameworks folder
+FRAMEWORKS_DIR=/path/to/Frameworks ./Scripts/update-vlc-frameworks.sh
+```
 
 ### Local package dependency
 
@@ -95,7 +131,7 @@ struct ContentView: View {
 
 ## Notes
 
-- This package does not download VLCKit binaries for you; it expects local `xcframework`s in `Frameworks/`.
+- SwiftPM will not auto-run the helper script on package resolve; run `./Scripts/update-vlc-frameworks.sh` yourself when you need to install or refresh the local `xcframework`s.
 - `VLCPlayerView` is a minimal drawable host. Configure `VLCMediaPlayer` (delegate, options, media, playback state) in your own code.
 
 ## Credits
