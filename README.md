@@ -1,22 +1,22 @@
 # swift-vlc
 
-Swift Package wrapper for VideoLAN's [VLCKit](https://github.com/videolan/vlckit) `xcframework`s.
+Swift Package wrapper for VideoLAN's [VLCKit](https://github.com/videolan/vlckit) `xcframework`s with an optional SwiftUI player UI.
 
 This package exposes:
 
 - `VLC`: a thin module that re-exports the platform-specific VLCKit module (`VLCKit`, `MobileVLCKit`, or `TVVLCKit`)
-- `VLCPlayer`: a SwiftUI `VLCPlayerView` that binds a `VLCMediaPlayer` to a native view controller
+- `VLCPlayer`: a SwiftUI `VLCPlayer(url:)` view that manages an internal `VLCMediaPlayer` and shows built-in playback controls
 
 ## Supported Platforms
 
-- macOS 10.15+
-- iOS 13+
-- tvOS 13+
+- macOS 15+
+- iOS 18+
+- tvOS 18+
 
 ## Project Layout
 
 - `Sources/VLC`: re-export layer for the underlying VLCKit framework
-- `Sources/VLCPlayer`: SwiftUI wrapper view for `VLCMediaPlayer`
+- `Sources/VLCPlayer`: SwiftUI player implementation (rendering host, controls, state/view model)
 - `Frameworks/*.xcframework`: local binary dependencies used by SwiftPM
 - `Scripts/update-vlc-frameworks.sh`: downloads/extracts/install VLCKit `xcframework`s
 - `Scripts/vlc-frameworks.conf`: configurable archive URLs and recorded SHA-256 checksums
@@ -88,7 +88,7 @@ dependencies: [
 )
 ```
 
-Use only `VLC` if you just need the VLCKit APIs. Add `VLCPlayer` if you want the SwiftUI wrapper view.
+Use only `VLC` if you just need the VLCKit APIs. Use `VLCPlayer` for the built-in SwiftUI player UI (and add `VLC` too if your app imports `VLC` directly).
 
 ## Usage
 
@@ -104,27 +104,19 @@ player.media = media
 player.play()
 ```
 
-### SwiftUI Player View (`VLCPlayer`)
+### SwiftUI Player (`VLCPlayer`)
 
-`VLCPlayerView` renders the video output of an existing `VLCMediaPlayer`. You manage playback lifecycle outside the view.
+`VLCPlayer` is a ready-to-use SwiftUI player that takes a media URL and manages playback lifecycle internally.
 
 ```swift
 import SwiftUI
-import VLC
 import VLCPlayer
 
 struct ContentView: View {
-  @State private var player = VLCMediaPlayer()
+  let url = URL(string: "https://example.com/video.mp4")!
 
   var body: some View {
-    VLCPlayerView(player: player)
-      .onAppear {
-        player.media = VLCMedia(url: URL(string: "https://example.com/video.mp4")!)
-        player.play()
-      }
-      .onDisappear {
-        player.stop()
-      }
+    VLCPlayer(url: url)
   }
 }
 ```
@@ -132,7 +124,8 @@ struct ContentView: View {
 ## Notes
 
 - SwiftPM will not auto-run the helper script on package resolve; run `./Scripts/update-vlc-frameworks.sh` yourself when you need to install or refresh the local `xcframework`s.
-- `VLCPlayerView` is a minimal drawable host. Configure `VLCMediaPlayer` (delegate, options, media, playback state) in your own code.
+- `VLCPlayer` includes built-in controls (play/pause/restart, seek slider, timestamps, audio/subtitle track selection when available).
+- `VLCPlayer` owns its `VLCMediaPlayer` instance. If you need direct player configuration/delegates, build your own UI using the `VLC` product.
 
 ## Credits
 

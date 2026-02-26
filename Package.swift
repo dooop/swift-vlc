@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
   name: "swift-vlc",
   platforms: [
-    .macOS(.v10_15), .iOS(.v13), .tvOS(.v13),
+    .macOS(.v15), .iOS(.v18), .tvOS(.v18),
   ],
   products: [
     .library(
