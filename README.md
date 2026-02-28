@@ -17,28 +17,37 @@ This package exposes:
 
 - `Sources/VLC`: re-export layer for the underlying VLCKit framework
 - `Sources/VLCPlayer`: SwiftUI player implementation (rendering host, controls, state/view model)
-- `Frameworks/*.xcframework`: local binary dependencies used by SwiftPM
-- `Scripts/update-vlc-frameworks.sh`: downloads/extracts/install VLCKit `xcframework`s
+- `Frameworks/*.xcframework`: local xcframework copies used during development
+- `Scripts/update-vlc-frameworks.sh`: downloads/extracts/installs VLCKit `xcframework`s for local development
 - `Scripts/vlc-frameworks.conf`: configurable archive URLs and recorded SHA-256 checksums
 
 ## Requirements
 
 - Xcode with a Swift 6 toolchain (`swift-tools-version: 6.0`)
-- The VLCKit `xcframework`s present in `Frameworks/`
-
-Expected framework paths:
-
-- `Frameworks/VLCKit.xcframework`
-- `Frameworks/MobileVLCKit.xcframework`
-- `Frameworks/TVVLCKit.xcframework`
 
 ## Installation
 
-### Fetch / refresh VLCKit frameworks
+### Swift Package Manager (remote)
 
-This package uses local `binaryTarget(path:)` entries, so the `xcframework`s must exist in `Frameworks/` before building.
+Add the package to your `Package.swift`:
 
-Use the helper script to download and install them:
+```swift
+dependencies: [
+  .package(url: "https://github.com/dooop/swift-vlc", from: "0.2.0")
+]
+```
+
+The VLCKit `xcframework`s are fetched automatically as remote binary targets — no manual download step is required.
+
+### Local package dependency (development)
+
+```swift
+dependencies: [
+  .package(path: "../swift-vlc")
+]
+```
+
+When working on this package locally, use the helper script to download the `xcframework`s into `Frameworks/` before building:
 
 ```bash
 ./Scripts/update-vlc-frameworks.sh
@@ -68,14 +77,6 @@ Optional usage:
 FRAMEWORKS_DIR=/path/to/Frameworks ./Scripts/update-vlc-frameworks.sh
 ```
 
-### Local package dependency
-
-```swift
-dependencies: [
-  .package(path: "../swift-vlc")
-]
-```
-
 ### Products
 
 ```swift
@@ -83,12 +84,13 @@ dependencies: [
   name: "MyApp",
   dependencies: [
     .product(name: "VLC", package: "swift-vlc"),
+    // or
     .product(name: "VLCPlayer", package: "swift-vlc"),
   ]
 )
 ```
 
-Use only `VLC` if you just need the VLCKit APIs. Use `VLCPlayer` for the built-in SwiftUI player UI (and add `VLC` too if your app imports `VLC` directly).
+Use `VLC` if you only need the raw VLCKit APIs. Use `VLCPlayer` for the built-in SwiftUI player UI — it already re-exports `VLC`, so you do not need to add both.
 
 ## Usage
 
@@ -106,7 +108,7 @@ player.play()
 
 ### SwiftUI Player (`VLCPlayer`)
 
-`VLCPlayer` is a ready-to-use SwiftUI player that takes a media URL and manages playback lifecycle internally.
+`VLCPlayer` is a ready-to-use SwiftUI player that takes a media URL and manages playback lifecycle internally. Importing `VLCPlayer` also exposes the full `VLC` module via re-export.
 
 ```swift
 import SwiftUI
@@ -123,9 +125,11 @@ struct ContentView: View {
 
 ## Notes
 
-- SwiftPM will not auto-run the helper script on package resolve; run `./Scripts/update-vlc-frameworks.sh` yourself when you need to install or refresh the local `xcframework`s.
-- `VLCPlayer` includes built-in controls (play/pause/restart, seek slider, timestamps, audio/subtitle track selection when available).
-- `VLCPlayer` owns its `VLCMediaPlayer` instance. If you need direct player configuration/delegates, build your own UI using the `VLC` product.
+- `VLCPlayer` includes built-in controls: play/pause/restart, seek slider, current/remaining timestamps, and audio/subtitle track selection when streams are available.
+- Playback positions are persisted per URL via `@AppStorage` so playback resumes where it left off.
+- `VLCPlayer` responds to scene phase changes: playback pauses when the scene becomes inactive and resumes when it becomes active again.
+- Platform-specific behaviour: the idle sleep timer is disabled on iOS/tvOS during playback; the cursor is hidden on macOS; the tvOS play/pause hardware command and macOS spacebar are wired to toggle playback.
+- `VLCPlayer` owns its `VLCMediaPlayer` instance. If you need direct player configuration or delegate callbacks, build your own UI using the `VLC` product.
 
 ## Credits
 
