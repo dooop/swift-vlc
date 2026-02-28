@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+@_exported import VLC
 
 public struct VLCPlayer: View {
   private let url: URL

@@ -5,16 +5,8 @@
 //  Created by Dominic Opitz on 01.06.24.
 //
 
-import Foundation
 import SwiftUI
-
-#if os(iOS)
-  import MobileVLCKit
-#elseif os(tvOS)
-  import TVVLCKit
-#elseif os(macOS)
-  import VLCKit
-#endif
+import VLC
 
 @MainActor
 class PlayerViewModel: NSObject, ObservableObject {
@@ -77,7 +69,6 @@ class PlayerViewModel: NSObject, ObservableObject {
   }
 
   func changeSubtitle(track: PlayerTrack) {
-    //Log.player.debug("change subtitle to \(track.name)")
     vlcPlayer?.currentVideoSubTitleIndex = track.index
   }
 
@@ -86,32 +77,23 @@ class PlayerViewModel: NSObject, ObservableObject {
 
     switch state {
     case .playing:
-      //Log.player.debug("vlc state: playing")
       self.state = .playing
     case .paused:
-      //Log.player.debug("vlc state: paused")
       self.state = .paused
     case .stopped:
-      //Log.player.debug("vlc state: stopped")
       self.state = .finished
     case .ended:
-      //Log.player.debug("vlc state: ended")
       self.state = .finished
     case .opening:
-      //Log.player.debug("vlc state: opening")
       self.state = .loading
     case .buffering:
-      //Log.player.debug("vlc state: buffering")
       self.state = playing ? .playing : .loading
     case .esAdded:
-      //Log.player.debug("vlc state: esAdded")
       updateAudioTracks()
       updateSubtitleTracks()
     case .error:
-      //Log.player.debug("vlc state: error")
       self.state = .error
     @unknown default: break
-    //Log.player.debug("vlc state: unknown")
     }
   }
 

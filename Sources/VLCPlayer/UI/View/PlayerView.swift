@@ -6,14 +6,7 @@
 //
 
 import SwiftUI
-
-#if os(iOS)
-  import MobileVLCKit
-#elseif os(tvOS)
-  import TVVLCKit
-#elseif os(macOS)
-  import VLCKit
-#endif
+import VLC
 
 #if os(macOS)
   struct PlayerView: NSViewControllerRepresentable {

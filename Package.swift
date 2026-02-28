@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
   name: "swift-vlc",
+  defaultLocalization: "en",
   platforms: [
     .macOS(.v15), .iOS(.v18), .tvOS(.v18),
   ],
@@ -47,6 +48,7 @@ let package = Package(
     .target(
       name: "VLCPlayer",
       dependencies: ["VLC"],
+      resources: [.process("UI/Resources")]
     ),
     .binaryTarget(
       name: "VLCKit",
