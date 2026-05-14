@@ -13,6 +13,6 @@ struct PlayerTrack: Identifiable, Hashable {
   var name: String
 
   static var disable: PlayerTrack {
-    return PlayerTrack(index: -1, name: "Disable")
+    return PlayerTrack(index: -1, name: String(localized: .disable))
   }
 }

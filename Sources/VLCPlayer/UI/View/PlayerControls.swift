@@ -67,8 +67,8 @@ struct PlayerControls: View {
           PlayerTrackButton(
             selection: $player.audio,
             tracks: $player.audioTracks,
-            title: "Audio",
-            message: "Change Audio Track",
+            title: .audio,
+            message: .changeAudioTrack,
             systemImage: "speaker.fill",
             onEditingChanged: editingChanged
           ) { track in
@@ -80,8 +80,8 @@ struct PlayerControls: View {
           PlayerTrackButton(
             selection: $player.subtitle,
             tracks: $player.subtitleTracks,
-            title: "Subtitle",
-            message: "Change Subtitle Track",
+            title: .subtitle,
+            message: .changeSubtitleTrack,
             systemImage: "text.bubble",
             onEditingChanged: editingChanged
           ) { track in

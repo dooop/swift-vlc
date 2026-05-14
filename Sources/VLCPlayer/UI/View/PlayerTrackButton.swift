@@ -11,8 +11,8 @@ struct PlayerTrackButton: View {
   @State private var showOptions = false
   @Binding var selection: PlayerTrack
   @Binding var tracks: [PlayerTrack]
-  let title: LocalizedStringKey
-  let message: LocalizedStringKey
+  let title: LocalizedStringResource
+  let message: LocalizedStringResource
   let systemImage: String
 
   var onEditingChanged: ((Bool) -> Void)?
@@ -42,7 +42,7 @@ struct PlayerTrackButton: View {
         }
       }
 
-      Button("Cancel", role: .cancel) {
+      Button(.cancel, role: .cancel) {
         showOptions = false
         onEditingChanged?(false)
       }
@@ -58,7 +58,8 @@ struct PlayerTrackButton: View {
   PlayerTrackButton(
     selection: $selection,
     tracks: .constant([.disable, PlayerTrack(index: 0, name: "English")]),
-    title: "Audio",
-    message: "Change Audio Track",
-    systemImage: "speaker.fill")
+    title: .audio,
+    message: .changeAudioTrack,
+    systemImage: "speaker.fill"
+  ).background(.black)
 }
