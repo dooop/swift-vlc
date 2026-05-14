@@ -178,7 +178,7 @@ public struct VLCPlayer: View {
   VLCPlayer(
     url: URL(
       string:
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        "https://test-videos.co.uk/vids/bigbuckbunny/mkv/1080/Big_Buck_Bunny_1080_10s_1MB.mkv"
     )!
   )
 }
