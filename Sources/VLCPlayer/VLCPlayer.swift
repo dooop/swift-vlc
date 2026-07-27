@@ -20,6 +20,9 @@ public struct VLCPlayer: View {
   ).autoconnect()
   @State private var editing: Bool = false
   @State private var showControls = true
+  #if os(tvOS)
+    @FocusState private var hiddenControlIsFocused: Bool
+  #endif
   @Environment(\.scenePhase) private var phase
 
   public init(url: URL) {
@@ -168,6 +171,10 @@ public struct VLCPlayer: View {
     )
     #if os(tvOS)
       .opacity(0)
+      .focused($hiddenControlIsFocused)
+      .onAppear {
+        hiddenControlIsFocused = true
+      }
     #elseif os(macOS)
       .buttonStyle(PlainButtonStyle())
     #endif
