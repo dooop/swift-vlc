@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Optional override, e.g. "/Applications/Xcode_16.4.app". Empty = the runner image default.
+  XCODE_APP: ""
+
+jobs:
+  format:
+    name: Format
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select Xcode
+        run: .github/scripts/select-xcode.sh
+
+      - name: swift-format lint
+        run: xcrun swift-format lint --recursive --strict Sources Tests Package.swift
+
+      - name: swift-format produces no diff
+        run: |
+          xcrun swift-format format --in-place --recursive Sources Tests Package.swift
+          if ! git diff --exit-code; then
+            echo "::error::Sources are not formatted. Run: xcrun swift-format format --in-place --recursive Sources Tests Package.swift"
+            exit 1
+          fi
+
+  manifest:
+    name: Manifest
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select Xcode
+        run: .github/scripts/select-xcode.sh
+
+      - name: Binary targets are published
+        run: .github/scripts/check-binary-targets.sh
+
+      # Guards Sources/VLCPlayer/UI/LocalizedStrings.swift against drifting away
+      # from Localizable.xcstrings: only SwiftPM compiles that hand-written
+      # mirror, so a key added to the catalog alone breaks here.
+      # `swift test` cannot run — SwiftPM does not embed VLCKit into the xctest
+      # bundle; the tests run under xcodebuild in build-test.
+      - name: swift build (SwiftPM path)
+        run: swift build
+
+  build-test:
+    name: ${{ matrix.name }}
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos
+            name: macOS
+          - platform: ios
+            name: iOS
+          - platform: tvos
+            name: tvOS
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select Xcode
+        run: .github/scripts/select-xcode.sh
+
+      - name: Cache resolved binary targets
+        uses: actions/cache@v4
+        with:
+          path: .derivedData/SourcePackages
+          key: sourcepackages-${{ runner.os }}-${{ hashFiles('Package.swift') }}
+          restore-keys: sourcepackages-${{ runner.os }}-
+
+      - name: Resolve destinations
+        id: destinations
+        run: |
+          set -euo pipefail
+          echo "build=$(Scripts/xcode-destination.sh '${{ matrix.platform }}' build)" >> "$GITHUB_OUTPUT"
+          echo "test=$(Scripts/xcode-destination.sh '${{ matrix.platform }}')" >> "$GITHUB_OUTPUT"
+
+      - name: Build (${{ matrix.name }})
+        run: |
+          xcodebuild build \
+            -scheme swift-vlc-Package \
+            -destination "${{ steps.destinations.outputs.build }}" \
+            -derivedDataPath .derivedData \
+            -quiet
+
+      - name: Test (${{ matrix.name }})
+        run: |
+          xcodebuild test \
+            -scheme swift-vlc-Package \
+            -destination "${{ steps.destinations.outputs.test }}" \
+            -derivedDataPath .derivedData \
+            -resultBundlePath "TestResults-${{ matrix.platform }}.xcresult" \
+            -quiet
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.platform }}
+          path: TestResults-${{ matrix.platform }}.xcresult
+          retention-days: 7
+
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    needs: [format, manifest, build-test]
+    if: always()
+    steps:
+      - name: Check job results
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "::error::At least one CI job failed."
+            exit 1
+          fi
+          echo "All CI jobs passed."

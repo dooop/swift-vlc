@@ -1,0 +1,160 @@
+name: VLCKit assets
+
+# Repackages the upstream VLCKit tarballs listed in Scripts/vlc-frameworks.conf
+# as the .xcframework.zip release assets that Package.swift's binaryTargets
+# point at, uploads them to a draft release, and opens a PR with the resulting
+# checksums.
+#
+# The order matters and cannot be reversed: `ditto -c -k` is not
+# byte-reproducible, so the checksum in Package.swift must be taken from the
+# archive that was actually uploaded. Never re-zip and copy that checksum.
+#
+# Run this only when the VLCKit version changes. When it did not, keep
+# binaryBaseURL pointing at the older tag whose assets are still published.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag the assets belong to (e.g. 0.4.0). Created as a draft if missing."
+        required: true
+        type: string
+      open_pr:
+        description: "Open a PR updating Package.swift with the uploaded checksums"
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: vlckit-assets
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  XCODE_APP: ""
+
+jobs:
+  package:
+    name: Package and upload
+    runs-on: macos-15
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select Xcode
+        run: .github/scripts/select-xcode.sh
+
+      - name: Validate tag input
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$TAG" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "::error::'$TAG' is not a X.Y.Z version tag."
+            exit 1
+          fi
+
+      - name: Show upstream sources
+        run: cat Scripts/vlc-frameworks.conf
+
+      - name: Download, repackage and checksum
+        run: Scripts/package-vlc-frameworks.sh
+
+      - name: Upload assets to draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              --draft \
+              --title "$TAG" \
+              --notes "VLCKit xcframework archives for $TAG. Notes are generated when the tag is pushed." \
+              --target "${{ github.sha }}"
+          fi
+
+          gh release upload "$TAG" dist/*.xcframework.zip --clobber
+          gh release view "$TAG"
+
+      - name: Update Package.swift with the uploaded checksums
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          .github/scripts/set-binary-targets.sh \
+            "https://github.com/${{ github.repository }}/releases/download/$TAG" \
+            dist/checksums.txt
+
+      - name: Job summary
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          {
+            echo "## VLCKit assets for \`$TAG\`"
+            echo
+            echo '### Uploaded archives'
+            echo '```'
+            cat dist/checksums.txt
+            echo '```'
+            echo
+            echo '### Package.swift'
+            echo '```diff'
+            git diff -- Package.swift
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open pull request
+        if: ${{ inputs.open_pr }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- Package.swift Scripts/vlc-frameworks.conf; then
+            echo "Package.swift already matches the uploaded assets — nothing to do."
+            exit 0
+          fi
+
+          branch="chore/vlckit-assets-$TAG"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add Package.swift Scripts/vlc-frameworks.conf
+          git commit -m "chore: point binary targets at the $TAG release assets"
+          # Dedicated bot branch, re-runs for the same tag replace it.
+          git push --force origin "$branch"
+
+          body=$(
+            printf '%s\n' \
+              "Repackaged the VLCKit xcframeworks and uploaded them to the draft release \`$TAG\`." \
+              "" \
+              "Checksums are taken from the archives that were actually uploaded — \`ditto -c -k\` is not" \
+              "byte-reproducible, so they cannot be reproduced by re-zipping locally." \
+              "" \
+              '```' \
+              "$(cat dist/checksums.txt)" \
+              '```' \
+              "" \
+              "After merging, follow the \`release\` skill: tag the merge commit as \`$TAG\`; the release" \
+              "workflow publishes the draft with these assets." \
+              "" \
+              "> Note: this PR was pushed with \`GITHUB_TOKEN\`, so CI does not start on its own." \
+              "> Close and reopen it (or push an empty commit) to trigger the checks."
+          )
+
+          if [ -n "$(gh pr list --head "$branch" --state open --json number --jq '.[].number')" ]; then
+            echo "A pull request for $branch is already open — it now carries the new commit."
+            gh pr view "$branch"
+          else
+            gh pr create \
+              --title "chore: VLCKit assets for $TAG" \
+              --body "$body" \
+              --base "${{ github.ref_name }}" \
+              --head "$branch"
+          fi

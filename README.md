@@ -1,5 +1,7 @@
 # swift-vlc
 
+[![CI](https://github.com/dooop/swift-vlc/actions/workflows/ci.yml/badge.svg)](https://github.com/dooop/swift-vlc/actions/workflows/ci.yml)
+
 Swift Package wrapper for VideoLAN's [VLCKit](https://github.com/videolan/vlckit) `xcframework`s with an optional SwiftUI player UI.
 
 This package exposes:
@@ -17,13 +19,16 @@ This package exposes:
 
 - `Sources/VLC`: re-export layer for the underlying VLCKit framework
 - `Sources/VLCPlayer`: SwiftUI player implementation (rendering host, controls, state/view model)
-- `Frameworks/*.xcframework`: local xcframework copies used during development
+- `Tests/`: Swift Testing suites for the VLCKit linkage and the player model/localization
+- `Frameworks/*.xcframework`: local xcframework copies for inspection and for building the release assets (git-ignored, not referenced by `Package.swift`)
 - `Scripts/update-vlc-frameworks.sh`: downloads/extracts/installs VLCKit `xcframework`s for local development
+- `Scripts/package-vlc-frameworks.sh`: repackages them as the `.xcframework.zip` release assets
+- `Scripts/xcode-destination.sh`: resolves an `xcodebuild -destination` per platform
 - `Scripts/vlc-frameworks.conf`: configurable archive URLs and recorded SHA-256 checksums
 
 ## Requirements
 
-- Xcode with a Swift 6 toolchain (`swift-tools-version: 6.0`)
+- Xcode 16 or newer with a Swift 6 toolchain (`swift-tools-version: 6.0`)
 
 ## Installation
 
@@ -33,7 +38,7 @@ Add the package to your `Package.swift`:
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/dooop/swift-vlc", from: "0.2.0")
+  .package(url: "https://github.com/dooop/swift-vlc", from: "0.3.1")
 ]
 ```
 
@@ -123,12 +128,46 @@ struct ContentView: View {
 }
 ```
 
+## Development
+
+`swift build` works, but **`swift test` does not** — SwiftPM does not embed the VLCKit binary
+framework into the xctest bundle, so the test bundle fails to load. Run the tests with `xcodebuild`.
+
+```bash
+# compile for every platform
+for platform in macos ios tvos; do
+  xcodebuild build -scheme swift-vlc-Package \
+    -destination "$(Scripts/xcode-destination.sh "$platform" build)" \
+    -derivedDataPath .derivedData -quiet
+done
+
+# run the tests (macOS, iOS Simulator, tvOS Simulator)
+for platform in macos ios tvos; do
+  xcodebuild test -scheme swift-vlc-Package \
+    -destination "$(Scripts/xcode-destination.sh "$platform")" \
+    -derivedDataPath .derivedData -quiet
+done
+
+# formatting
+xcrun swift-format format --in-place --recursive Sources Tests Package.swift
+```
+
+`Scripts/xcode-destination.sh` resolves a concrete simulator UDID from the newest installed runtime,
+so nothing depends on a simulator name that only exists in one Xcode version.
+
+The player UI uses String Catalog symbols (`.audio`, `.cancel`, …). Xcode generates those from
+`Localizable.xcstrings`, SwiftPM does not — `Sources/VLCPlayer/UI/LocalizedStrings.swift` mirrors
+them behind `#if !Xcode` so both build systems work. A new catalog key has to be added in both
+places.
+
+The same steps run in CI (`.github/workflows/ci.yml`) on every push and pull request.
+
 ## Notes
 
 - `VLCPlayer` includes built-in controls: play/pause/restart, seek slider, current/remaining timestamps, and audio/subtitle track selection when streams are available.
 - Playback positions are persisted per URL via `@AppStorage` so playback resumes where it left off.
-- `VLCPlayer` responds to scene phase changes: playback pauses when the scene becomes inactive and resumes when it becomes active again.
-- Platform-specific behaviour: the idle sleep timer is disabled on iOS/tvOS during playback; the cursor is hidden on macOS; the tvOS play/pause hardware command and macOS spacebar are wired to toggle playback.
+- `VLCPlayer` responds to scene phase changes: playback pauses when the scene becomes inactive (a notification banner, Control Center, a macOS window losing focus) and resumes when it becomes active. Real backgrounding releases the player and persists the position; returning reloads and resumes where it left off.
+- Platform-specific behaviour: on iOS/tvOS the idle sleep timer is disabled while playback is running (independently of whether the controls are visible); on macOS the cursor is hidden while the controls are hidden; the tvOS play/pause hardware command and the macOS spacebar toggle playback.
 - `VLCPlayer` owns its `VLCMediaPlayer` instance. If you need direct player configuration or delegate callbacks, build your own UI using the `VLC` product.
 
 ## Credits

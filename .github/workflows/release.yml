@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-*"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  XCODE_APP: ""
+
+jobs:
+  verify:
+    name: Verify ${{ matrix.name }}
+    runs-on: macos-15
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - platform: macos
+            name: macOS
+          - platform: ios
+            name: iOS
+          - platform: tvos
+            name: tvOS
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select Xcode
+        run: .github/scripts/select-xcode.sh
+
+      - name: Binary targets are published
+        run: .github/scripts/check-binary-targets.sh
+
+      - name: Resolve destinations
+        id: destinations
+        run: |
+          set -euo pipefail
+          echo "build=$(Scripts/xcode-destination.sh '${{ matrix.platform }}' build)" >> "$GITHUB_OUTPUT"
+          echo "test=$(Scripts/xcode-destination.sh '${{ matrix.platform }}')" >> "$GITHUB_OUTPUT"
+
+      # No cache on purpose: a release must prove that a cold resolve of the
+      # published binary targets succeeds, which is also what validates their
+      # checksums.
+      - name: Build (${{ matrix.name }})
+        run: |
+          xcodebuild build \
+            -scheme swift-vlc-Package \
+            -destination "${{ steps.destinations.outputs.build }}" \
+            -derivedDataPath .derivedData \
+            -quiet
+
+      - name: Test (${{ matrix.name }})
+        run: |
+          xcodebuild test \
+            -scheme swift-vlc-Package \
+            -destination "${{ steps.destinations.outputs.test }}" \
+            -derivedDataPath .derivedData \
+            -quiet
+
+  publish:
+    name: Publish release
+    runs-on: ubuntu-latest
+    needs: verify
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          # 0.x and pre-release tags are published as GitHub pre-releases.
+          prerelease="false"
+          case "$VERSION" in
+            0.* | *-*) prerelease="true" ;;
+          esac
+
+          # update-vlckit uploads the xcframework archives into a draft release
+          # for this tag. Publish that draft instead of creating a second one so
+          # the assets are kept.
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "Release $VERSION exists — publishing it."
+            gh release edit "$VERSION" --draft=false --prerelease="$prerelease"
+          else
+            echo "Creating release $VERSION."
+            gh release create "$VERSION" \
+              --title "$VERSION" \
+              --generate-notes \
+              --prerelease="$prerelease"
+          fi
+
+          gh release view "$VERSION"
