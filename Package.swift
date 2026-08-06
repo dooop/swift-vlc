@@ -52,6 +52,14 @@ let package = Package(
       dependencies: ["VLC"],
       resources: [.process("UI/Resources")]
     ),
+    .testTarget(
+      name: "VLCTests",
+      dependencies: ["VLC"]
+    ),
+    .testTarget(
+      name: "VLCPlayerTests",
+      dependencies: ["VLCPlayer"]
+    ),
     .binaryTarget(
       name: "VLCKit",
       url: "\(binaryBaseURL)VLCKit.xcframework.zip",

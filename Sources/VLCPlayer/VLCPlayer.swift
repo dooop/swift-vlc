@@ -52,17 +52,31 @@ public struct VLCPlayer: View {
     #endif
     .onAppear {
       startPlayer()
-      disableSleepTimerOrCursor(true)
     }
     .onDisappear {
       stopPlayer()
-      disableSleepTimerOrCursor(false)
+      setIdleTimerDisabled(false)
+      setCursorHidden(false)
     }
     .onChange(of: phase) {
       switch phase {
-      case .inactive: stopPlayer()
-      case .active: startPlayer()
-      default: break
+      // Transient interruptions (Control Center, a notification, losing window
+      // focus) only pause — tearing the player down here would drop buffers and
+      // re-open the media for every banner.
+      case .inactive:
+        viewModel.pause()
+      // Real backgrounding releases the player; the position is persisted by
+      // `reset()` and restored on the next `startPlayer()`.
+      case .background:
+        stopPlayer()
+      case .active:
+        if viewModel.vlcPlayer == nil {
+          startPlayer()
+        } else {
+          viewModel.play()
+        }
+      @unknown default:
+        break
       }
     }
     .onReceive(timer) { _ in
@@ -74,8 +88,10 @@ public struct VLCPlayer: View {
     .onChange(of: viewModel.state) {
       switch viewModel.state {
       case .playing:
+        setIdleTimerDisabled(true)
         restartTimer()
       case .paused, .error, .finished:
+        setIdleTimerDisabled(false)
         animateControls(true)
         cancelTimer()
       default: break
@@ -145,18 +161,25 @@ public struct VLCPlayer: View {
   }
 
   private func animateControls(_ visible: Bool) {
-    disableSleepTimerOrCursor(!visible)
+    setCursorHidden(!visible)
     withAnimation {
       showControls = visible
       toolbarVisibility = visible ? .automatic : .hidden
     }
   }
 
-  private func disableSleepTimerOrCursor(_ disabled: Bool = true) {
+  /// Follows the playback state, not the control visibility — the device must
+  /// not sleep while a video is running, whether or not the controls are shown.
+  private func setIdleTimerDisabled(_ disabled: Bool) {
     #if canImport(UIKit)
       UIApplication.shared.isIdleTimerDisabled = disabled
-    #elseif os(macOS)
-      NSCursor.setHiddenUntilMouseMoves(disabled)
+    #endif
+  }
+
+  /// Follows the control visibility: the cursor is part of the chrome.
+  private func setCursorHidden(_ hidden: Bool) {
+    #if os(macOS)
+      NSCursor.setHiddenUntilMouseMoves(hidden)
     #endif
   }
 
