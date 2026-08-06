@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "indentation": {
+    "spaces": 2
+  },
+  "lineLength": 100,
+  "indentConditionalCompilationBlocks": true,
+  "respectsExistingLineBreaks": true,
+  "rules": {
+    "AlwaysUseLowerCamelCase": true,
+    "NoBlockComments": false,
+    "OrderedImports": true,
+    "UseSynthesizedInitializer": false
+  }
+}
