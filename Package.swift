@@ -4,7 +4,7 @@ import PackageDescription
 let binaryBaseURL = "https://github.com/dooop/swift-vlc/releases/download/0.3.0/"
 
 let package = Package(
-  name: "swift-vlc",
+  name: "vlc-player",
   defaultLocalization: "en",
   platforms: [
     .macOS(.v15), .iOS(.v18), .tvOS(.v18),

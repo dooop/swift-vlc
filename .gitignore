@@ -34,6 +34,13 @@ playground.xcworkspace
 Frameworks/
 dist/
 
+# Gradle / Android
+/.gradle/
+/.kotlin/
+/build/
+/local.properties
+/vlc-player/build/
+
 ## macOS
 .DS_Store
 
