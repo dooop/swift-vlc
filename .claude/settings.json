@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(xcodebuild build:*)",
+      "Bash(xcodebuild test:*)",
+      "Bash(xcodebuild -list:*)",
+      "Bash(xcodebuild -showsdks:*)",
+      "Bash(xcodebuild -showdestinations:*)",
+      "Bash(xcrun simctl list:*)",
+      "Bash(xcrun swift-format:*)",
+      "Bash(swift package dump-package:*)",
+      "Bash(swift package resolve:*)",
+      "Bash(swift package compute-checksum:*)",
+      "Bash(Scripts/xcode-destination.sh:*)",
+      "Bash(./Scripts/xcode-destination.sh:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
+      "Bash(gh release view:*)",
+      "Bash(gh release list:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh workflow list:*)"
+    ]
+  }
+}
