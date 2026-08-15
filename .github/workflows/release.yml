@@ -71,12 +71,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
 
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
 
       - name: Install Android SDK
         run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
@@ -98,7 +98,7 @@ jobs:
           cp android/vlc-player/build/outputs/aar/vlc-player-release.aar \
             "vlc-player-android-${VERSION}.aar"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: android-aar
           path: vlc-player-android-${{ github.ref_name }}.aar
@@ -115,7 +115,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: android-aar
           path: dist
