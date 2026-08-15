@@ -173,6 +173,16 @@ dependencies {
 The Android component accepts an optional `subtitleScale` percentage (default `100`). It owns and
 releases LibVLC internally, just as the SwiftUI component owns its `VLCMediaPlayer`.
 
+The repository also includes a small runnable sample application in `android/app`. Open the root
+project in Android Studio and run the `app` configuration, or build its debug APK from the command
+line:
+
+```bash
+./gradlew :app:assembleDebug
+```
+
+The app accepts HTTP(S), RTSP, RTMP, file, and content URIs and starts with a public sample video.
+
 ## Development
 
 `swift build` works, but **`swift test` does not** — SwiftPM does not embed the VLCKit binary
@@ -196,8 +206,8 @@ done
 # formatting
 xcrun swift-format format --in-place --recursive Sources Tests Package.swift
 
-# Android AAR, lint, and unit tests (from the repository root)
-./gradlew :vlc-player:assembleRelease :vlc-player:lintDebug :vlc-player:testDebugUnitTest
+# Android sample app, AAR, lint, and unit tests (from the repository root)
+./gradlew :app:assembleDebug :vlc-player:assembleRelease :vlc-player:lintDebug :vlc-player:testDebugUnitTest
 ```
 
 `Scripts/xcode-destination.sh` resolves a concrete simulator UDID from the newest installed runtime,

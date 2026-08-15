@@ -40,6 +40,7 @@ dist/
 /build/
 /local.properties
 /android/vlc-player/build/
+/android/app/build/
 
 ## macOS
 .DS_Store

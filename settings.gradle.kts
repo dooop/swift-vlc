@@ -15,5 +15,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "vlc-player"
+include(":app")
+project(":app").projectDir = file("android/app")
 include(":vlc-player")
 project(":vlc-player").projectDir = file("android/vlc-player")
