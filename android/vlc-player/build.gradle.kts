@@ -11,7 +11,7 @@ version = providers.gradleProperty("releaseVersion").getOrElse("0.0.0-SNAPSHOT")
 
 android {
     namespace = "org.videolan.vlcplayer"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 23
