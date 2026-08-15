@@ -78,7 +78,7 @@ jobs:
         run: .github/scripts/select-xcode.sh
 
       - name: Cache resolved binary targets
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .derivedData/SourcePackages
           key: sourcepackages-${{ runner.os }}-${{ hashFiles('Package.swift') }}
