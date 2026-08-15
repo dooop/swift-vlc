@@ -36,4 +36,5 @@ kotlin {
 
 dependencies {
     implementation(project(":vlc-player"))
+    implementation(libs.activity.compose)
 }

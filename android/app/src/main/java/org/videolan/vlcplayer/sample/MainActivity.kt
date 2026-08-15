@@ -1,8 +1,8 @@
 package org.videolan.vlcplayer.sample
 
-import android.app.Activity
 import android.net.Uri
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.ComposeView
 import org.videolan.vlcplayer.VLCPlayer
 
-class MainActivity : Activity() {
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(
@@ -141,4 +141,4 @@ private fun VLCPlayerSampleApp() {
 
 private val SUPPORTED_SCHEMES = setOf("http", "https", "rtsp", "rtmp", "file", "content")
 private const val SAMPLE_VIDEO_URL =
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    "https://test-videos.co.uk/vids/bigbuckbunny/mkv/1080/Big_Buck_Bunny_1080_10s_1MB.mkv"

@@ -32,7 +32,7 @@ internal class VLCPlayerController(
 ) : AutoCloseable {
     private val appContext = context.applicationContext
     private val preferences = appContext.getSharedPreferences(POSITIONS_STORE, Context.MODE_PRIVATE)
-    private val libVlc = LibVLC(appContext, listOf("--sub-text-scale=$subtitleScale"))
+    private val libVlc = LibVLC(appContext, mutableListOf("--sub-text-scale=$subtitleScale"))
 
     private var currentUrl: Uri? = null
     private var player: MediaPlayer? = null
