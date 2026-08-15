@@ -2,18 +2,20 @@
 
 [![CI](https://github.com/dooop/swift-vlc/actions/workflows/ci.yml/badge.svg)](https://github.com/dooop/swift-vlc/actions/workflows/ci.yml)
 
-Swift Package wrapper for VideoLAN's [VLCKit](https://github.com/videolan/vlckit) `xcframework`s with an optional SwiftUI player UI.
+Swift Package wrapper for VideoLAN's [VLCKit](https://github.com/videolan/vlckit) `xcframework`s with an optional SwiftUI player UI, plus a matching Android AAR built with Jetpack Compose and LibVLC.
 
 This package exposes:
 
 - `VLC`: a thin module that re-exports the platform-specific VLCKit module (`VLCKit`, `MobileVLCKit`, or `TVVLCKit`)
 - `VLCPlayer`: a SwiftUI `VLCPlayer(url:)` view that manages an internal `VLCMediaPlayer` and shows built-in playback controls
+- `vlc-player`: a Compose `VLCPlayer(url:)` component with the same ownership, lifecycle, resume, and controls model backed by LibVLC
 
 ## Supported Platforms
 
 - macOS 15+
 - iOS 18+
 - tvOS 18+
+- Android 6.0+ (API 23)
 
 ## Project Layout
 
@@ -25,10 +27,12 @@ This package exposes:
 - `Scripts/package-vlc-frameworks.sh`: repackages them as the `.xcframework.zip` release assets
 - `Scripts/xcode-destination.sh`: resolves an `xcodebuild -destination` per platform
 - `Scripts/vlc-frameworks.conf`: configurable archive URLs and recorded SHA-256 checksums
+- `android/vlc-player`: Android library module producing the Compose/LibVLC AAR
 
 ## Requirements
 
 - Xcode 16 or newer with a Swift 6 toolchain (`swift-tools-version: 6.0`)
+- Android Studio or JDK 17 plus Android SDK 36 for the Android library (the checked-in Gradle wrapper installs Gradle itself)
 
 ## Installation
 
@@ -128,6 +132,57 @@ struct ContentView: View {
 }
 ```
 
+### Jetpack Compose Player (Android)
+
+For a source checkout, use the Gradle project at the repository root and depend on `:vlc-player`.
+The public component mirrors the SwiftUI initializer:
+
+```kotlin
+import android.net.Uri
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import org.videolan.vlcplayer.VLCPlayer
+
+@Composable
+fun PlayerScreen() {
+    VLCPlayer(
+        url = Uri.parse("https://example.com/video.mp4"),
+        modifier = Modifier.fillMaxSize(),
+    )
+}
+```
+
+Each GitHub release contains `swift-vlc-android-<version>.aar`. It is a standard thin AAR; when
+using that file directly rather than the Gradle module, the consuming app must also declare its
+runtime dependencies:
+
+```kotlin
+dependencies {
+    implementation(files("libs/swift-vlc-android-0.4.0.aar"))
+    implementation(platform("androidx.compose:compose-bom:2026.06.01"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
+    implementation("org.videolan.android:libvlc-all:3.7.5")
+}
+```
+
+The Android component accepts an optional `subtitleScale` percentage (default `100`). It owns and
+releases LibVLC internally, just as the SwiftUI component owns its `VLCMediaPlayer`.
+
+The repository also includes a small runnable sample application in `android/app`. Open the root
+project in Android Studio and run the `app` configuration, or build its debug APK from the command
+line:
+
+```bash
+./gradlew :app:assembleDebug
+```
+
+The app accepts HTTP(S), RTSP, RTMP, file, and content URIs and starts with a public sample video.
+
 ## Development
 
 `swift build` works, but **`swift test` does not** — SwiftPM does not embed the VLCKit binary
@@ -150,6 +205,9 @@ done
 
 # formatting
 xcrun swift-format format --in-place --recursive Sources Tests Package.swift
+
+# Android sample app, AAR, lint, and unit tests (from the repository root)
+./gradlew :app:assembleDebug :vlc-player:assembleRelease :vlc-player:lintDebug :vlc-player:testDebugUnitTest
 ```
 
 `Scripts/xcode-destination.sh` resolves a concrete simulator UDID from the newest installed runtime,
@@ -160,7 +218,8 @@ The player UI uses String Catalog symbols (`.audio`, `.cancel`, …). Xcode gene
 them behind `#if !Xcode` so both build systems work. A new catalog key has to be added in both
 places.
 
-The same steps run in CI (`.github/workflows/ci.yml`) on every push and pull request.
+The same steps run in CI (`.github/workflows/ci.yml`) on every push and pull request. Tagged release
+builds also attach the versioned Android AAR to the GitHub release.
 
 ## Notes
 
@@ -169,6 +228,9 @@ The same steps run in CI (`.github/workflows/ci.yml`) on every push and pull req
 - `VLCPlayer` responds to scene phase changes: playback pauses when the scene becomes inactive (a notification banner, Control Center, a macOS window losing focus) and resumes when it becomes active. Real backgrounding releases the player and persists the position; returning reloads and resumes where it left off.
 - Platform-specific behaviour: on iOS/tvOS the idle sleep timer is disabled while playback is running (independently of whether the controls are visible); on macOS the cursor is hidden while the controls are hidden; the tvOS play/pause hardware command and the macOS spacebar toggle playback.
 - `VLCPlayer` owns its `VLCMediaPlayer` instance. If you need direct player configuration or delegate callbacks, build your own UI using the `VLC` product.
+- The Android `VLCPlayer` includes the same play/pause/restart, seek, current/remaining time,
+  audio/subtitle selection, five-second control auto-hide, per-URI position persistence, screen-on,
+  and lifecycle behavior as the SwiftUI implementation.
 
 ## Credits
 

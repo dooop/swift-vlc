@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vlc_player_audio">Audio</string>
+    <string name="vlc_player_subtitle">Subtitles</string>
+    <string name="vlc_player_change_audio">Change audio track</string>
+    <string name="vlc_player_change_subtitle">Change subtitle track</string>
+    <string name="vlc_player_disable">Disable</string>
+    <string name="vlc_player_cancel">Cancel</string>
+    <string name="vlc_player_play">Play</string>
+    <string name="vlc_player_pause">Pause</string>
+    <string name="vlc_player_restart">Restart</string>
+    <string name="vlc_player_error">Playback failed</string>
+    <string name="vlc_player_seek">Playback position</string>
+</resources>
