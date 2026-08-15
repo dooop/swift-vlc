@@ -98,7 +98,7 @@ jobs:
           cp android/vlc-player/build/outputs/aar/vlc-player-release.aar \
             "swift-vlc-android-${VERSION}.aar"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: android-aar
           path: swift-vlc-android-${{ github.ref_name }}.aar
