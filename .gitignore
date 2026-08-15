@@ -39,7 +39,7 @@ dist/
 /.kotlin/
 /build/
 /local.properties
-/vlc-player/build/
+/android/vlc-player/build/
 
 ## macOS
 .DS_Store

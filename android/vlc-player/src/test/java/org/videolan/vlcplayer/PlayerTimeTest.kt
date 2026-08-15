@@ -1,4 +1,4 @@
-package de.doop.vlcplayer
+package org.videolan.vlcplayer
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

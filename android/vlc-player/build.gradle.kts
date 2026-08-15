@@ -6,11 +6,11 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-group = "de.doop"
+group = "org.videolan"
 version = providers.gradleProperty("releaseVersion").getOrElse("0.0.0-SNAPSHOT")
 
 android {
-    namespace = "de.doop.vlcplayer"
+    namespace = "org.videolan.vlcplayer"
     compileSdk = 36
 
     defaultConfig {

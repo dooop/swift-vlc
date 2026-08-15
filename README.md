@@ -27,7 +27,7 @@ This package exposes:
 - `Scripts/package-vlc-frameworks.sh`: repackages them as the `.xcframework.zip` release assets
 - `Scripts/xcode-destination.sh`: resolves an `xcodebuild -destination` per platform
 - `Scripts/vlc-frameworks.conf`: configurable archive URLs and recorded SHA-256 checksums
-- `vlc-player`: Android library module producing the Compose/LibVLC AAR
+- `android/vlc-player`: Android library module producing the Compose/LibVLC AAR
 
 ## Requirements
 
@@ -142,7 +142,7 @@ import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import de.doop.vlcplayer.VLCPlayer
+import org.videolan.vlcplayer.VLCPlayer
 
 @Composable
 fun PlayerScreen() {

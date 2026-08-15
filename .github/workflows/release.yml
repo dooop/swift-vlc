@@ -95,7 +95,7 @@ jobs:
         env:
           VERSION: ${{ github.ref_name }}
         run: |
-          cp vlc-player/build/outputs/aar/vlc-player-release.aar \
+          cp android/vlc-player/build/outputs/aar/vlc-player-release.aar \
             "swift-vlc-android-${VERSION}.aar"
 
       - uses: actions/upload-artifact@v4

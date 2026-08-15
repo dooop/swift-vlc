@@ -1,4 +1,4 @@
-package de.doop.vlcplayer
+package org.videolan.vlcplayer
 
 import android.content.Context
 import android.net.Uri
