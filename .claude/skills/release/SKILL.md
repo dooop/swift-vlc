@@ -1,9 +1,9 @@
 ---
 name: release
-description: Cut a new swift-vlc version — pre-flight checks, tag, GitHub release. Use when asked to release, publish, ship or tag a version, or to prepare release notes for this package.
+description: Cut a new VLC Player version for the Swift package and Android AAR — pre-flight checks, tag, and GitHub release. Use when asked to release, publish, ship, tag a version, or prepare release notes.
 ---
 
-# Release swift-vlc
+# Release VLC Player
 
 Versions are plain `X.Y.Z` tags (no `v` prefix) — SwiftPM consumers resolve them directly.
 `0.x` releases are marked as pre-releases on GitHub.
@@ -12,7 +12,8 @@ Versions are plain `X.Y.Z` tags (no `v` prefix) — SwiftPM consumers resolve th
 
 Never tag before these hold:
 
-1. `main` is clean and up to date; the full build+test matrix passes (`verify-build` skill).
+1. `main` is clean and up to date; the full Apple and Android build/test matrix passes
+   (`verify-build` skill).
 2. `Package.swift`'s `binaryBaseURL` points at a tag whose GitHub release **has all three assets**:
 
    ```bash
@@ -28,7 +29,8 @@ Never tag before these hold:
      normal and intended (0.3.1 reuses 0.3.0's assets).
    - VLCKit changed → the assets for the new tag must already exist. Run the `update-vlckit` skill
      first; do not tag before its PR is merged.
-3. The README's version examples still make sense.
+3. The root, Swift, and Android README version examples still make sense, and the release workflow
+   produces `vlc-player-android-<version>.aar`.
 
 ## Cut it
 

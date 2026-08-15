@@ -1,6 +1,6 @@
 name: VLCKit assets
 
-# Repackages the upstream VLCKit tarballs listed in Scripts/vlc-frameworks.conf
+# Repackages the upstream VLCKit tarballs listed in swift/Scripts/vlc-frameworks.conf
 # as the .xcframework.zip release assets that Package.swift's binaryTargets
 # point at, uploads them to a draft release, and opens a PR with the resulting
 # checksums.
@@ -59,10 +59,10 @@ jobs:
           fi
 
       - name: Show upstream sources
-        run: cat Scripts/vlc-frameworks.conf
+        run: cat swift/Scripts/vlc-frameworks.conf
 
       - name: Download, repackage and checksum
-        run: Scripts/package-vlc-frameworks.sh
+        run: swift/Scripts/package-vlc-frameworks.sh
 
       - name: Upload assets to draft release
         env:
@@ -116,7 +116,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          if git diff --quiet -- Package.swift Scripts/vlc-frameworks.conf; then
+          if git diff --quiet -- Package.swift swift/Scripts/vlc-frameworks.conf; then
             echo "Package.swift already matches the uploaded assets — nothing to do."
             exit 0
           fi
@@ -125,7 +125,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
-          git add Package.swift Scripts/vlc-frameworks.conf
+          git add Package.swift swift/Scripts/vlc-frameworks.conf
           git commit -m "chore: point binary targets at the $TAG release assets"
           # Dedicated bot branch, re-runs for the same tag replace it.
           git push --force origin "$branch"

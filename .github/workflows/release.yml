@@ -43,8 +43,8 @@ jobs:
         id: destinations
         run: |
           set -euo pipefail
-          echo "build=$(Scripts/xcode-destination.sh '${{ matrix.platform }}' build)" >> "$GITHUB_OUTPUT"
-          echo "test=$(Scripts/xcode-destination.sh '${{ matrix.platform }}')" >> "$GITHUB_OUTPUT"
+          echo "build=$(swift/Scripts/xcode-destination.sh '${{ matrix.platform }}' build)" >> "$GITHUB_OUTPUT"
+          echo "test=$(swift/Scripts/xcode-destination.sh '${{ matrix.platform }}')" >> "$GITHUB_OUTPUT"
 
       # No cache on purpose: a release must prove that a cold resolve of the
       # published binary targets succeeds, which is also what validates their
@@ -52,7 +52,7 @@ jobs:
       - name: Build (${{ matrix.name }})
         run: |
           xcodebuild build \
-            -scheme swift-vlc-Package \
+            -scheme vlc-player-Package \
             -destination "${{ steps.destinations.outputs.build }}" \
             -derivedDataPath .derivedData \
             -quiet
@@ -60,7 +60,7 @@ jobs:
       - name: Test (${{ matrix.name }})
         run: |
           xcodebuild test \
-            -scheme swift-vlc-Package \
+            -scheme vlc-player-Package \
             -destination "${{ steps.destinations.outputs.test }}" \
             -derivedDataPath .derivedData \
             -quiet
@@ -79,7 +79,7 @@ jobs:
       - uses: android-actions/setup-android@v3
 
       - name: Install Android SDK
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+        run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
 
       - uses: gradle/actions/setup-gradle@v4
 
@@ -96,12 +96,12 @@ jobs:
           VERSION: ${{ github.ref_name }}
         run: |
           cp android/vlc-player/build/outputs/aar/vlc-player-release.aar \
-            "swift-vlc-android-${VERSION}.aar"
+            "vlc-player-android-${VERSION}.aar"
 
       - uses: actions/upload-artifact@v4
         with:
           name: android-aar
-          path: swift-vlc-android-${{ github.ref_name }}.aar
+          path: vlc-player-android-${{ github.ref_name }}.aar
           if-no-files-found: error
 
   publish:
@@ -148,7 +148,7 @@ jobs:
           fi
 
           gh release upload "$VERSION" \
-            "dist/swift-vlc-android-${VERSION}.aar" \
+            "dist/vlc-player-android-${VERSION}.aar" \
             --clobber
 
           gh release view "$VERSION"

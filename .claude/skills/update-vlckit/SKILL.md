@@ -26,7 +26,7 @@ PR with the resulting `Package.swift`.
 
 1. Find the new upstream URLs at <https://download.videolan.org/pub/cocoapods/prod/> — all three
    frameworks must be the same VLCKit version and build hash.
-2. Update `Scripts/vlc-frameworks.conf` (leave the checksum column as-is; the script rewrites it):
+2. Update `swift/Scripts/vlc-frameworks.conf` (leave the checksum column as-is; the script rewrites it):
 
    ```text
    MobileVLCKit|https://download.videolan.org/pub/cocoapods/prod/MobileVLCKit-<version>-<hash>.tar.xz|
@@ -47,11 +47,11 @@ PR with the resulting `Package.swift`.
 Only if the workflow cannot be used. Needs ~2 GB of disk and a fast connection.
 
 ```bash
-# 1. download upstream, install into Frameworks/, refresh conf checksums
-Scripts/update-vlc-frameworks.sh
+# 1. download upstream, install into swift/Frameworks/, refresh conf checksums
+swift/Scripts/update-vlc-frameworks.sh
 
 # 2. repackage into dist/*.xcframework.zip and print the SwiftPM checksums
-Scripts/package-vlc-frameworks.sh --no-download
+swift/Scripts/package-vlc-frameworks.sh --no-download
 
 # 3. upload to the (draft) release for the next tag
 gh release create <tag> --draft --title <tag> --notes "" || true
@@ -63,7 +63,7 @@ cat dist/checksums.txt
 
 Then set `binaryBaseURL` to
 `https://github.com/dooop/swift-vlc/releases/download/<tag>/` and paste each checksum into its
-`binaryTarget`. `dist/` and `Frameworks/` are git-ignored — do not commit them.
+`binaryTarget`. `dist/` and `swift/Frameworks/` are git-ignored — do not commit them.
 
 ## Verify
 
@@ -76,7 +76,7 @@ rm -rf .derivedData
 ```
 
 Also confirm the upstream tarball checksums that `update-vlc-frameworks.sh` wrote into
-`Scripts/vlc-frameworks.conf` are committed — that file is the record of which upstream build the
+`swift/Scripts/vlc-frameworks.conf` are committed — that file is the record of which upstream build the
 release assets were made from.
 
 ## Gotchas

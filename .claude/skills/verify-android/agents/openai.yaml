@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify Android"
+  short_description: "Build, lint, and test the Android modules"
+  default_prompt: "Use $verify-android to verify the Android VLC Player changes."

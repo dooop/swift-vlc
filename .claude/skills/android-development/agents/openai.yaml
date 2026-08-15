@@ -1,0 +1,4 @@
+interface:
+  display_name: "Android Development"
+  short_description: "Develop the Compose and LibVLC Android modules"
+  default_prompt: "Use $android-development to implement an Android VLC Player change."

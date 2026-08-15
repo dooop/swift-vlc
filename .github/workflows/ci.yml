@@ -28,13 +28,13 @@ jobs:
         run: .github/scripts/select-xcode.sh
 
       - name: swift-format lint
-        run: xcrun swift-format lint --recursive --strict Sources Tests Package.swift
+        run: xcrun swift-format lint --configuration swift/.swift-format --recursive --strict swift/Sources swift/Tests Package.swift
 
       - name: swift-format produces no diff
         run: |
-          xcrun swift-format format --in-place --recursive Sources Tests Package.swift
+          xcrun swift-format format --configuration swift/.swift-format --in-place --recursive swift/Sources swift/Tests Package.swift
           if ! git diff --exit-code; then
-            echo "::error::Sources are not formatted. Run: xcrun swift-format format --in-place --recursive Sources Tests Package.swift"
+            echo "::error::Swift sources are not formatted. See swift/README.md."
             exit 1
           fi
 
@@ -50,7 +50,7 @@ jobs:
       - name: Binary targets are published
         run: .github/scripts/check-binary-targets.sh
 
-      # Guards Sources/VLCPlayer/UI/LocalizedStrings.swift against drifting away
+      # Guards swift/Sources/VLCPlayer/UI/LocalizedStrings.swift against drifting away
       # from Localizable.xcstrings: only SwiftPM compiles that hand-written
       # mirror, so a key added to the catalog alone breaks here.
       # `swift test` cannot run — SwiftPM does not embed VLCKit into the xctest
@@ -88,13 +88,13 @@ jobs:
         id: destinations
         run: |
           set -euo pipefail
-          echo "build=$(Scripts/xcode-destination.sh '${{ matrix.platform }}' build)" >> "$GITHUB_OUTPUT"
-          echo "test=$(Scripts/xcode-destination.sh '${{ matrix.platform }}')" >> "$GITHUB_OUTPUT"
+          echo "build=$(swift/Scripts/xcode-destination.sh '${{ matrix.platform }}' build)" >> "$GITHUB_OUTPUT"
+          echo "test=$(swift/Scripts/xcode-destination.sh '${{ matrix.platform }}')" >> "$GITHUB_OUTPUT"
 
       - name: Build (${{ matrix.name }})
         run: |
           xcodebuild build \
-            -scheme swift-vlc-Package \
+            -scheme vlc-player-Package \
             -destination "${{ steps.destinations.outputs.build }}" \
             -derivedDataPath .derivedData \
             -quiet
@@ -102,7 +102,7 @@ jobs:
       - name: Test (${{ matrix.name }})
         run: |
           xcodebuild test \
-            -scheme swift-vlc-Package \
+            -scheme vlc-player-Package \
             -destination "${{ steps.destinations.outputs.test }}" \
             -derivedDataPath .derivedData \
             -resultBundlePath "TestResults-${{ matrix.platform }}.xcresult" \
@@ -130,7 +130,7 @@ jobs:
       - uses: android-actions/setup-android@v3
 
       - name: Install Android SDK
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+        run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
 
       - uses: gradle/actions/setup-gradle@v4
 

@@ -5,8 +5,8 @@ description: Add, change or translate a user-facing string in the VLCPlayer UI v
 
 # Add a localized string
 
-All user-facing text of `VLCPlayer` lives in
-`Sources/VLCPlayer/UI/Resources/Localizable.xcstrings`. Source language is `en`, currently also
+All user-facing Swift text of `VLCPlayer` lives in
+`swift/Sources/VLCPlayer/UI/Resources/Localizable.xcstrings`. Source language is `en`, currently also
 translated to `de`. Never hard-code a display string in a view, and never add a `.strings` or
 `.stringsdict` file next to the catalog.
 
@@ -16,7 +16,7 @@ Every key exists **twice** and both have to be updated:
 
 1. Xcode's build system generates `LocalizedStringResource` members from the catalog into
    `GeneratedStringSymbols_Localizable.swift` (used by `xcodebuild`).
-2. `Sources/VLCPlayer/UI/LocalizedStrings.swift` mirrors them by hand behind `#if !Xcode`, so
+2. `swift/Sources/VLCPlayer/UI/LocalizedStrings.swift` mirrors them by hand behind `#if !Xcode`, so
    `swift build` compiles too. Xcode defines the `Xcode` compilation condition, which is what keeps
    the two from colliding — never remove that guard.
 
@@ -37,8 +37,8 @@ String(localized: .disable)           // ✅
 Text("Subtitle")                      // ❌ hard-coded, not localized
 ```
 
-This generation only happens under `xcodebuild`, which is why `swift build` fails on this package —
-see CLAUDE.md.
+This generation only happens under `xcodebuild`; the hand-written mirror is what makes
+`swift build` compile too.
 
 ## Steps
 
@@ -61,7 +61,7 @@ see CLAUDE.md.
 
    The `en` value is the key itself and is not repeated. `shouldTranslate: false` is used for
    pass-through keys like `%@`.
-2. Add the matching member to `Sources/VLCPlayer/UI/LocalizedStrings.swift`:
+2. Add the matching member to `swift/Sources/VLCPlayer/UI/LocalizedStrings.swift`:
 
    ```swift
    static var playbackSpeed: LocalizedStringResource { localizable("Playback Speed") }
@@ -69,7 +69,7 @@ see CLAUDE.md.
 
 3. Use `.playbackSpeed` in the view.
 4. Add the key to the `catalogKeysResolve` argument list in
-   `Tests/VLCPlayerTests/LocalizationTests.swift` so a missing translation is caught by CI.
+   `swift/Tests/VLCPlayerTests/LocalizationTests.swift` so a missing translation is caught by CI.
 5. Build both ways — `swift build` covers the hand-written mirror, `xcodebuild` the generated
    symbols (`verify-build` skill). A key added to only one of them fails in the other.
 

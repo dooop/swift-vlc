@@ -1,0 +1,4 @@
+interface:
+  display_name: "Add Android Localized String"
+  short_description: "Add and verify Android string resources"
+  default_prompt: "Use $add-android-localized-string to add localized Android UI text."

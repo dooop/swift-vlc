@@ -1,0 +1,90 @@
+# VLC Player for Android
+
+The Android implementation is a Jetpack Compose library backed by LibVLC. It supports Android 6.0
+(API 23) and newer and includes a runnable sample application.
+
+## Modules
+
+- `vlc-player/` — reusable Android library that produces an AAR
+- `app/` — sample Compose app consuming `:vlc-player`
+- Root `build.gradle.kts`, `settings.gradle.kts`, `gradle/`, and wrapper files — shared Gradle setup
+
+Open the repository root in Android Studio so both modules and the version catalog resolve.
+
+## Source-checkout dependency
+
+```kotlin
+dependencies {
+    implementation(project(":vlc-player"))
+}
+```
+
+## Compose usage
+
+```kotlin
+import android.net.Uri
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import org.videolan.vlcplayer.VLCPlayer
+
+@Composable
+fun PlayerScreen() {
+    VLCPlayer(
+        url = Uri.parse("https://example.com/video.mp4"),
+        modifier = Modifier.fillMaxSize(),
+    )
+}
+```
+
+`VLCPlayer` owns and releases LibVLC internally. It includes playback, restart, seek, audio/subtitle
+selection, five-second control auto-hide, per-URI playback-position persistence, screen-on handling,
+and lifecycle behavior. Pass `subtitleScale` to change subtitle size from its default `100` percent.
+
+## Using the release AAR
+
+GitHub releases contain `vlc-player-android-<version>.aar`. It is a thin AAR, so a consumer using
+the file directly must also declare its runtime dependencies:
+
+```kotlin
+dependencies {
+    implementation(files("libs/vlc-player-android-0.4.0.aar"))
+    implementation(platform("androidx.compose:compose-bom:2026.08.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
+    implementation("org.videolan.android:libvlc-all:3.7.5")
+}
+```
+
+Keep this example aligned with `gradle/libs.versions.toml` when dependencies change.
+
+## Development and checks
+
+Requirements are JDK 17 and Android SDK 37. Use the checked-in Gradle wrapper from the repository
+root:
+
+```bash
+# Fast library test loop
+./gradlew :vlc-player:testDebugUnitTest
+
+# Library compilation and lint
+./gradlew :vlc-player:assembleDebug :vlc-player:lintDebug
+
+# Full local Android verification, including the sample and release AAR
+./gradlew :app:assembleDebug :vlc-player:assembleRelease \
+  :vlc-player:lintDebug :vlc-player:testDebugUnitTest
+```
+
+The release AAR is written to `android/vlc-player/build/outputs/aar/vlc-player-release.aar`; the
+sample APK is under `android/app/build/outputs/apk/debug/`.
+
+## Localization
+
+Library strings live in `vlc-player/src/main/res/values/strings.xml`, with translations in locale
+directories such as `values-de/strings.xml`. Sample-only strings belong under `app/src/main/res/`.
+Never hard-code user-facing text in Kotlin/Compose. Add every library key to the default resource
+file first, translate it in each supported locale, reference it through `stringResource`, and run
+lint plus unit tests.

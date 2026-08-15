@@ -28,6 +28,7 @@ let package = Package(
         .target(name: "MobileVLCKit", condition: .when(platforms: [.iOS])),
         .target(name: "TVVLCKit", condition: .when(platforms: [.tvOS])),
       ],
+      path: "swift/Sources/VLC",
       linkerSettings: [
         .linkedFramework("QuartzCore", .when(platforms: [.iOS])),
         .linkedFramework("CoreText", .when(platforms: [.iOS, .tvOS])),
@@ -50,15 +51,18 @@ let package = Package(
     .target(
       name: "VLCPlayer",
       dependencies: ["VLC"],
+      path: "swift/Sources/VLCPlayer",
       resources: [.process("UI/Resources")]
     ),
     .testTarget(
       name: "VLCTests",
-      dependencies: ["VLC"]
+      dependencies: ["VLC"],
+      path: "swift/Tests/VLCTests"
     ),
     .testTarget(
       name: "VLCPlayerTests",
-      dependencies: ["VLCPlayer"]
+      dependencies: ["VLCPlayer"],
+      path: "swift/Tests/VLCPlayerTests"
     ),
     .binaryTarget(
       name: "VLCKit",

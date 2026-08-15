@@ -7,7 +7,7 @@
 # Usage: set-binary-targets.sh <base-url> <checksums-file>
 #
 # <checksums-file> is the "<sha256>  <Name>.xcframework.zip" listing produced by
-# Scripts/package-vlc-frameworks.sh.
+# swift/Scripts/package-vlc-frameworks.sh.
 
 set -euo pipefail
 
