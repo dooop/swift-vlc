@@ -69,7 +69,7 @@ class PlayerViewModel: NSObject, ObservableObject {
       vlcPlayer?.deselectAllAudioTracks()
       return
     }
-    vlcPlayer?.audioTracks.first(where: { $0.trackId == track.id })?.selectedExclusively = true
+    vlcPlayer?.audioTracks.first(where: { $0.trackId == track.id })?.isSelectedExclusively = true
   }
 
   func changeSubtitle(track: PlayerTrack) {
@@ -77,7 +77,7 @@ class PlayerViewModel: NSObject, ObservableObject {
       vlcPlayer?.deselectAllTextTracks()
       return
     }
-    vlcPlayer?.textTracks.first(where: { $0.trackId == track.id })?.selectedExclusively = true
+    vlcPlayer?.textTracks.first(where: { $0.trackId == track.id })?.isSelectedExclusively = true
   }
 
   private func updatePlayer(state: VLCMediaPlayerState, playing: Bool) {
