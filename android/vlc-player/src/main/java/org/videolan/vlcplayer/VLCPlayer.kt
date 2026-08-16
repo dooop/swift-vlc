@@ -208,8 +208,7 @@ private fun PlayerControls(
     var sliderPosition by remember { mutableFloatStateOf(controller.position) }
     var seeking by remember { mutableStateOf(false) }
     val seekDescription = stringResource(R.string.vlc_player_seek)
-
-    if (!seeking) sliderPosition = controller.position
+    val displayedPosition = if (seeking) sliderPosition else controller.position
 
     Box(
         modifier = modifier.background(Color.Black.copy(alpha = 0.6f)),
@@ -254,7 +253,7 @@ private fun PlayerControls(
             }
 
             Slider(
-                value = sliderPosition,
+                value = displayedPosition,
                 onValueChange = {
                     if (!seeking) controller.pause()
                     seeking = true

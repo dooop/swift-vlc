@@ -29,21 +29,21 @@ struct PlayerControls: View {
           }
         },
         label: {
-          let icon =
-            switch player.state {
-            case .playing: "pause.fill"
-            case .paused: "play.fill"
-            case .finished: "arrow.trianglehead.clockwise"
-            case .error: "exclamationmark.triangle.fill"
-            default: player.playing ? "pause.fill" : "play.fill"
-            }
-
           if player.state == .loading {
             ProgressView()
               #if !os(tvOS)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
               #endif
           } else {
+            let icon =
+              switch player.state {
+              case .playing: "pause.fill"
+              case .paused: "play.fill"
+              case .finished: "arrow.trianglehead.clockwise"
+              case .error: "exclamationmark.triangle.fill"
+              default: player.playing ? "pause.fill" : "play.fill"
+              }
+
             Image(systemName: icon)
               .font(.largeTitle)
               .foregroundStyle(.white)
