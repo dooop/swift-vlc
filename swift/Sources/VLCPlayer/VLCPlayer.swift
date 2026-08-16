@@ -13,11 +13,8 @@ public struct VLCPlayer: View {
 
   @StateObject private var viewModel = PlayerViewModel()
   @State private var toolbarVisibility = Visibility.automatic
-  @State private var timer = Timer.publish(
-    every: 5,
-    on: .main,
-    in: .common
-  ).autoconnect()
+  private let timer = Timer.publish(every: 5, on: .main, in: .common)
+  @State private var timerConnection: Cancellable?
   @State private var editing: Bool = false
   @State private var showControls = true
   #if os(tvOS)
@@ -101,7 +98,7 @@ public struct VLCPlayer: View {
       .onPlayPauseCommand {
         togglePlaying()
       }
-      .onMoveCommand { move in
+      .onMoveCommand { _ in
         animateControls(true)
         if viewModel.playing {
           restartTimer()
@@ -152,12 +149,13 @@ public struct VLCPlayer: View {
   }
 
   private func cancelTimer() {
-    timer.upstream.connect().cancel()
+    timerConnection?.cancel()
+    timerConnection = nil
   }
 
   private func restartTimer() {
     cancelTimer()
-    timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+    timerConnection = timer.connect()
   }
 
   private func animateControls(_ visible: Bool) {

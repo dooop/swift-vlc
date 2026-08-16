@@ -12,8 +12,8 @@ Read `swift/README.md` before Apple-platform work and `android/README.md` before
 | `Package.swift` | Swift package manifest; this is the only Swift package file intentionally kept at root |
 | `swift/Sources/` | Swift package source targets |
 | `swift/Tests/` | Swift Testing targets |
-| `swift/Scripts/` | VLCKit packaging and Xcode destination helpers |
-| `swift/.swift-format` | Swift formatting rules |
+| `swift/Scripts/` | Xcode destination helpers |
+| `.swift-format` | Swift formatting rules |
 | `android/vlc-player/` | Compose/LibVLC Android library |
 | `android/app/` | Runnable Android sample |
 | `build.gradle.kts`, `settings.gradle.kts`, `gradle/`, `gradlew*` | Root Android build |
@@ -38,7 +38,7 @@ Android verification is:
 
 ```bash
 ./gradlew :app:assembleDebug :vlc-player:assembleRelease \
-  :vlc-player:lintDebug :vlc-player:testDebugUnitTest
+  :vlc-player:lintDebug :vlc-player:testDebugUnitTest ktlintCheck
 ```
 
 ## Swift rules
@@ -51,7 +51,7 @@ Android verification is:
   `UIViewControllerRepresentable`. tvOS has a custom slider and focus behavior.
 - Keep types internal unless intentionally changing the public API.
 - Use Swift Testing, never network/playback in tests, and preserve Swift file header style.
-- Format with `swift/.swift-format`; see `verify-build` for the exact command.
+- Format with `.swift-format`; see `verify-build` for the exact command.
 
 Swift localization lives in
 `swift/Sources/VLCPlayer/UI/Resources/Localizable.xcstrings`. Xcode generates typed symbols for its
@@ -70,6 +70,8 @@ keys, covered by `swift/Tests/VLCPlayerTests/LocalizationTests.swift`. Use the
 - Put library resources under `android/vlc-player/src/main/res`; sample resources belong to
   `android/app/src/main/res`. Use the `add-android-localized-string` skill for UI text.
 - Keep dependency versions in `gradle/libs.versions.toml`, not scattered through module files.
+- Format Kotlin with ktlint (`org.jlleitschuh.gradle.ktlint`, applied to `:app` and `:vlc-player`).
+  Run `./gradlew ktlintFormat` locally and `./gradlew ktlintCheck` before finishing, matching CI.
 
 ## VLCKit dependency
 

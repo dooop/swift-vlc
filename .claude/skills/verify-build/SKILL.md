@@ -30,7 +30,7 @@ for platform in macos ios tvos; do
     -derivedDataPath .derivedData -quiet
 done
 
-xcrun swift-format lint --configuration swift/.swift-format \
+xcrun swift-format lint --configuration .swift-format \
   --recursive --strict swift/Sources swift/Tests Package.swift
 ```
 
@@ -44,7 +44,7 @@ Follow `verify-android` and run its full suite:
 
 ```bash
 ./gradlew :app:assembleDebug :vlc-player:assembleRelease \
-  :vlc-player:lintDebug :vlc-player:testDebugUnitTest
+  :vlc-player:lintDebug :vlc-player:testDebugUnitTest ktlintCheck
 ```
 
 ## Scope
