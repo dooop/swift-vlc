@@ -128,6 +128,9 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: ktlint check
+        run: ./gradlew ktlintCheck
+
       - name: Build, lint, and test Android AAR
         run: ./gradlew :vlc-player:assembleRelease :vlc-player:lintDebug :vlc-player:testDebugUnitTest
 
