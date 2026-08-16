@@ -150,15 +150,11 @@ extension PlayerViewModel: VLCMediaPlayerDelegate {
     }
   }
 
-  nonisolated func mediaPlayerTrackAdded(
-    _ trackId: String, withType trackType: VLCMedia.TrackType
-  ) {
+  nonisolated func mediaPlayerTrackAdded(_ trackId: String, with trackType: VLCMedia.TrackType) {
     refreshTracks()
   }
 
-  nonisolated func mediaPlayerTrackRemoved(
-    _ trackId: String, withType trackType: VLCMedia.TrackType
-  ) {
+  nonisolated func mediaPlayerTrackRemoved(_ trackId: String, with trackType: VLCMedia.TrackType) {
     refreshTracks()
   }
 
