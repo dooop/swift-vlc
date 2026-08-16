@@ -11,12 +11,30 @@ destination=$1
 result_bundle=${2:-}
 max_attempts=2
 
+xcodebuild \
+  build-for-testing \
+  -scheme swift-vlc-player-Package \
+  -destination "$destination" \
+  -derivedDataPath .derivedData \
+  -quiet
+
+xctestrun=
+while IFS= read -r candidate; do
+  if [[ -z "$xctestrun" || "$candidate" -nt "$xctestrun" ]]; then
+    xctestrun=$candidate
+  fi
+done < <(find .derivedData/Build/Products -maxdepth 1 -type f -name '*.xctestrun' -print)
+
+if [[ -z "$xctestrun" ]]; then
+  echo "error: build-for-testing did not produce an .xctestrun file" >&2
+  exit 1
+fi
+
 for ((attempt = 1; attempt <= max_attempts; attempt++)); do
   arguments=(
-    test
-    -scheme swift-vlc-player-Package
+    test-without-building
+    -xctestrun "$xctestrun"
     -destination "$destination"
-    -derivedDataPath .derivedData
     -quiet
   )
 
@@ -34,8 +52,8 @@ for ((attempt = 1; attempt <= max_attempts; attempt++)); do
     status=$?
   fi
 
-  # Xcode 26 can abort while launching Swift-package tests after invalidating
-  # its generated package scheme. A new xcodebuild process regenerates it.
+  # Keep a retry for unrelated simulator-launch aborts. Test launching uses the
+  # immutable xctestrun file, so it cannot invalidate SwiftPM's generated scheme.
   if ((status != 134 || attempt == max_attempts)); then
     exit "$status"
   fi
