@@ -10,9 +10,9 @@ implementation is a Jetpack Compose library backed by LibVLC.
 
 | Platform | UI | VLC integration | Minimum version |
 | --- | --- | --- | --- |
-| macOS | SwiftUI | VLCKit | macOS 15 |
-| iOS | SwiftUI | MobileVLCKit | iOS 18 |
-| tvOS | SwiftUI | TVVLCKit | tvOS 18 |
+| macOS | SwiftUI | VLCKit 4 | macOS 15 |
+| iOS | SwiftUI | VLCKit 4 | iOS 18 |
+| tvOS | SwiftUI | VLCKit 4 | tvOS 18 |
 | Android | Jetpack Compose | LibVLC | Android 6.0 / API 23 |
 
 ## Repository layout

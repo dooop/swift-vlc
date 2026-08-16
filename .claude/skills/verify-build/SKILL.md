@@ -34,8 +34,9 @@ xcrun swift-format lint --configuration swift/.swift-format \
   --recursive --strict swift/Sources swift/Tests Package.swift
 ```
 
-A Swift change is verified only after all three Apple destinations build and test. A checksum or
-404 failure in a binary target belongs to the `update-vlckit` workflow.
+A Swift change is verified only after all three Apple destinations build and test. A checksum
+failure resolving the upstream VLCKit dependency means the pinned tag in `Package.swift` no longer
+matches what's published — re-check the version and exact checksum against the upstream release.
 
 ## Android checks
 

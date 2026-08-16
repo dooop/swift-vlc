@@ -60,16 +60,24 @@ class PlayerViewModel: NSObject, ObservableObject {
   }
 
   func seek(to position: Float) {
-    vlcPlayer?.position = position
+    vlcPlayer?.position = Double(position)
     currentTime = VLCTime(int: Int32(position * Float(self.duration))).stringValue
   }
 
   func changeAudio(track: PlayerTrack) {
-    vlcPlayer?.currentAudioTrackIndex = track.index
+    guard track.id != PlayerTrack.disabledId else {
+      vlcPlayer?.deselectAllAudioTracks()
+      return
+    }
+    vlcPlayer?.audioTracks.first(where: { $0.trackId == track.id })?.selectedExclusively = true
   }
 
   func changeSubtitle(track: PlayerTrack) {
-    vlcPlayer?.currentVideoSubTitleIndex = track.index
+    guard track.id != PlayerTrack.disabledId else {
+      vlcPlayer?.deselectAllTextTracks()
+      return
+    }
+    vlcPlayer?.textTracks.first(where: { $0.trackId == track.id })?.selectedExclusively = true
   }
 
   private func updatePlayer(state: VLCMediaPlayerState, playing: Bool) {
@@ -80,17 +88,10 @@ class PlayerViewModel: NSObject, ObservableObject {
       self.state = .playing
     case .paused:
       self.state = .paused
-    case .stopped:
+    case .stopped, .stopping:
       self.state = .finished
-    case .ended:
-      self.state = .finished
-    case .opening:
+    case .opening, .nothingSpecial:
       self.state = .loading
-    case .buffering:
-      self.state = playing ? .playing : .loading
-    case .esAdded:
-      updateAudioTracks()
-      updateSubtitleTracks()
     case .error:
       self.state = .error
     @unknown default: break
@@ -110,50 +111,26 @@ class PlayerViewModel: NSObject, ObservableObject {
   }
 
   private func updateAudioTracks() {
-    let tracks = tracksBy(
-      names: vlcPlayer?.audioTrackNames ?? [],
-      indexes: vlcPlayer?.audioTrackIndexes ?? [])
-    audio = tracks.first(where: { $0.index == vlcPlayer?.currentAudioTrackIndex }) ?? .disable
-    audioTracks = tracks
+    let tracks = vlcPlayer?.audioTracks ?? []
+    audioTracks = tracks.map { PlayerTrack(id: $0.trackId, name: $0.trackName) }
+    audio =
+      tracks.first(where: { $0.isSelected })
+      .map { PlayerTrack(id: $0.trackId, name: $0.trackName) } ?? .disable
   }
 
   private func updateSubtitleTracks() {
-    let tracks = tracksBy(
-      names: vlcPlayer?.videoSubTitlesNames ?? [],
-      indexes: vlcPlayer?.videoSubTitlesIndexes ?? [])
+    let tracks = vlcPlayer?.textTracks ?? []
+    subtitleTracks = tracks.map { PlayerTrack(id: $0.trackId, name: $0.trackName) }
     subtitle =
-      tracks.first(where: { $0.index == vlcPlayer?.currentVideoSubTitleIndex }) ?? .disable
-    subtitleTracks = tracks
-  }
-
-  private func tracksBy(names: [Any], indexes: [Any]) -> [PlayerTrack] {
-    guard names.count == indexes.count else {
-      return []
-    }
-
-    var tracks: [PlayerTrack] = []
-    for (index, track) in indexes.enumerated() {
-      if let trackIndex = track as? Int32,
-        let trackName = names[index] as? String
-      {
-        tracks.append(PlayerTrack(index: trackIndex, name: trackName))
-      }
-    }
-    return tracks
+      tracks.first(where: { $0.isSelected })
+      .map { PlayerTrack(id: $0.trackId, name: $0.trackName) } ?? .disable
   }
 }
 
 extension PlayerViewModel: VLCMediaPlayerDelegate {
-  nonisolated func mediaPlayerStateChanged(_ aNotification: Notification) {
-    guard let player = aNotification.object as? VLCMediaPlayer else {
-      return
-    }
-
-    let state = player.state
-    let playing = player.isPlaying
-
+  nonisolated func mediaPlayerStateChanged(_ newState: VLCMediaPlayerState) {
     Task { @MainActor in
-      self.updatePlayer(state: state, playing: playing)
+      self.updatePlayer(state: newState, playing: self.vlcPlayer?.isPlaying ?? false)
     }
   }
 
@@ -162,7 +139,7 @@ extension PlayerViewModel: VLCMediaPlayerDelegate {
       return
     }
 
-    let position = player.position
+    let position = Float(player.position)
     let duration = player.media?.length.intValue ?? 0
     let time = player.time.stringValue
     let remaining = (player.remainingTime ?? VLCTime()).stringValue
@@ -170,6 +147,31 @@ extension PlayerViewModel: VLCMediaPlayerDelegate {
     Task { @MainActor in
       self.updatePlayer(
         position: position, duration: duration, currentTime: time, remainingTime: remaining)
+    }
+  }
+
+  nonisolated func mediaPlayerTrackAdded(
+    _ trackId: String, withType trackType: VLCMedia.TrackType
+  ) {
+    refreshTracks()
+  }
+
+  nonisolated func mediaPlayerTrackRemoved(
+    _ trackId: String, withType trackType: VLCMedia.TrackType
+  ) {
+    refreshTracks()
+  }
+
+  nonisolated func mediaPlayerTrackSelected(
+    _ trackType: VLCMedia.TrackType, selectedId: String, unselectedId: String
+  ) {
+    refreshTracks()
+  }
+
+  private nonisolated func refreshTracks() {
+    Task { @MainActor in
+      self.updateAudioTracks()
+      self.updateSubtitleTracks()
     }
   }
 }

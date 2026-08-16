@@ -31,10 +31,6 @@ xcuserdata/
 /.swiftpm/
 /Package.resolved
 
-# Local VLCKit and release artifacts
-/swift/Frameworks/
-/dist/
-
 # Gradle and Kotlin
 /.gradle/
 /.kotlin/

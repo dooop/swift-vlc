@@ -43,7 +43,8 @@ Android verification is:
 
 ## Swift rules
 
-- `VLC` re-exports `VLCKit`, `MobileVLCKit`, or `TVVLCKit`; `VLCPlayer` is the SwiftUI product.
+- `VLC` re-exports upstream VLCKit 4's unified `VLCKit` module (one binary for macOS, iOS, and
+  tvOS); `VLCPlayer` is the SwiftUI product.
 - Maintain strict Swift 6 concurrency. `PlayerViewModel` is `@MainActor`; nonisolated delegate
   callbacks hop back with `Task { @MainActor in ... }`.
 - Prefer platform compile conditions. macOS uses `NSViewControllerRepresentable`; iOS/tvOS use
@@ -70,12 +71,12 @@ keys, covered by `swift/Tests/VLCPlayerTests/LocalizationTests.swift`. Use the
   `android/app/src/main/res`. Use the `add-android-localized-string` skill for UI text.
 - Keep dependency versions in `gradle/libs.versions.toml`, not scattered through module files.
 
-## VLCKit release assets
+## VLCKit dependency
 
-`Package.swift` points to xcframework zip files attached to this repository's GitHub releases.
-Upstream inputs live in `swift/Scripts/vlc-frameworks.conf`. Re-zipping is not byte-reproducible, so
-the manifest checksum must come from the archive actually uploaded. Use `update-vlckit` before
-changing those targets and `release` when publishing.
+`Package.swift` depends directly on upstream [VLCKit](https://github.com/videolan/vlckit)'s own
+Swift package (pinned with `exact:`, since VLCKit 4 alpha tags are not safely orderable by
+semver ranges). VLCKit owns its binary target, archive, and checksum; this repository does not
+repackage or re-host VLCKit assets. Use the `release` skill when publishing.
 
 The Android release asset is named `vlc-player-android-<version>.aar`.
 
