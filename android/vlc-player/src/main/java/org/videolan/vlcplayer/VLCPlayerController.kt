@@ -32,14 +32,16 @@ internal class VLCPlayerController(
 ) : AutoCloseable {
     private val appContext = context.applicationContext
     private val preferences = appContext.getSharedPreferences(POSITIONS_STORE, Context.MODE_PRIVATE)
+
     // LibVLC construction touches the native library directly and can fail with an
     // UnsatisfiedLinkError (missing/incompatible .so) or an IllegalStateException, neither of
     // which the app can prevent — surface it as a player error instead of crashing.
-    private val libVlc: LibVLC? = try {
-        LibVLC(appContext, mutableListOf("--sub-text-scale=$subtitleScale"))
-    } catch (e: Throwable) {
-        null
-    }
+    private val libVlc: LibVLC? =
+        try {
+            LibVLC(appContext, mutableListOf("--sub-text-scale=$subtitleScale"))
+        } catch (e: Throwable) {
+            null
+        }
 
     private var currentUrl: Uri? = null
     private var player: MediaPlayer? = null
@@ -194,7 +196,10 @@ internal class VLCPlayerController(
      * been unloaded or replaced (e.g. during [restart]). Comparing against the live [player] instead
      * of a boolean flag discards such stale events regardless of delivery timing.
      */
-    private fun onPlayerEvent(source: MediaPlayer, event: MediaPlayer.Event) {
+    private fun onPlayerEvent(
+        source: MediaPlayer,
+        event: MediaPlayer.Event,
+    ) {
         val currentPlayer = player?.takeIf { it === source } ?: return
         when (event.type) {
             MediaPlayer.Event.Opening -> status = PlayerStatus.Loading
@@ -235,9 +240,7 @@ internal class VLCPlayerController(
         subtitleTracks.replaceWith(currentPlayer.spuTracks.orEmpty())
     }
 
-    private fun MutableList<PlayerTrack>.replaceWith(
-        tracks: Array<out MediaPlayer.TrackDescription>,
-    ) {
+    private fun MutableList<PlayerTrack>.replaceWith(tracks: Array<out MediaPlayer.TrackDescription>) {
         val incoming = tracks.map { PlayerTrack(it.id, it.name) }
         val disabledLabel = appContext.getString(R.string.vlc_player_disable)
         clear()
@@ -251,7 +254,11 @@ internal class VLCPlayerController(
 }
 
 /** Prepends a "disable" placeholder to [tracks], unless one is already present or the list is empty. */
-internal fun buildTrackList(tracks: List<PlayerTrack>, disabledId: Int, disabledLabel: String): List<PlayerTrack> {
+internal fun buildTrackList(
+    tracks: List<PlayerTrack>,
+    disabledId: Int,
+    disabledLabel: String,
+): List<PlayerTrack> {
     if (tracks.isEmpty() || tracks.any { it.id == disabledId }) return tracks
     return listOf(PlayerTrack(disabledId, disabledLabel)) + tracks
 }

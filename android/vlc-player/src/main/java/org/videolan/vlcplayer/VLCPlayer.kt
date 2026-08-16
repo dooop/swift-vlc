@@ -72,9 +72,10 @@ public fun VLCPlayer(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val hostView = LocalView.current
-    val controller = remember(context.applicationContext, subtitleScale) {
-        VLCPlayerController(context, subtitleScale)
-    }
+    val controller =
+        remember(context.applicationContext, subtitleScale) {
+            VLCPlayerController(context, subtitleScale)
+        }
     var controlsVisible by remember { mutableStateOf(true) }
     var interaction by remember { mutableIntStateOf(0) }
     var trackDialog by remember { mutableStateOf<TrackDialog?>(null) }
@@ -100,14 +101,15 @@ public fun VLCPlayer(
     }
 
     DisposableEffect(lifecycleOwner, url) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.start(url)
-                Lifecycle.Event.ON_PAUSE -> controller.pause()
-                Lifecycle.Event.ON_STOP -> controller.unload()
-                else -> Unit
+        val observer =
+            LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_RESUME -> controller.start(url)
+                    Lifecycle.Event.ON_PAUSE -> controller.pause()
+                    Lifecycle.Event.ON_STOP -> controller.unload()
+                    else -> Unit
+                }
             }
-        }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
@@ -127,12 +129,13 @@ public fun VLCPlayer(
 
         if (!controlsVisible) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable {
-                        showControls()
-                        controller.toggle()
-                    },
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .clickable {
+                            showControls()
+                            controller.toggle()
+                        },
             )
         }
 
@@ -155,14 +158,16 @@ public fun VLCPlayer(
     }
 
     trackDialog?.let { dialog ->
-        val tracks = when (dialog) {
-            TrackDialog.Audio -> controller.audioTracks
-            TrackDialog.Subtitles -> controller.subtitleTracks
-        }
-        val selected = when (dialog) {
-            TrackDialog.Audio -> controller.selectedAudioTrack
-            TrackDialog.Subtitles -> controller.selectedSubtitleTrack
-        }
+        val tracks =
+            when (dialog) {
+                TrackDialog.Audio -> controller.audioTracks
+                TrackDialog.Subtitles -> controller.subtitleTracks
+            }
+        val selected =
+            when (dialog) {
+                TrackDialog.Audio -> controller.selectedAudioTrack
+                TrackDialog.Subtitles -> controller.selectedSubtitleTrack
+            }
         TrackSelectionDialog(
             type = dialog,
             tracks = tracks,
@@ -223,10 +228,11 @@ private fun PlayerControls(
         )
 
         Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(16.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -266,11 +272,12 @@ private fun PlayerControls(
                     controller.play()
                     onInteraction()
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics {
-                        contentDescription = seekDescription
-                    },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .semantics {
+                            contentDescription = seekDescription
+                        },
             )
 
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -304,18 +311,20 @@ private fun MainControl(
         return
     }
 
-    val icon = when (status) {
-        PlayerStatus.Playing -> Icons.Default.Pause
-        PlayerStatus.Finished -> Icons.Default.Replay
-        PlayerStatus.Error -> Icons.Default.Error
-        else -> Icons.Default.PlayArrow
-    }
-    val label = when (status) {
-        PlayerStatus.Playing -> stringResource(R.string.vlc_player_pause)
-        PlayerStatus.Finished -> stringResource(R.string.vlc_player_restart)
-        PlayerStatus.Error -> stringResource(R.string.vlc_player_error)
-        else -> stringResource(R.string.vlc_player_play)
-    }
+    val icon =
+        when (status) {
+            PlayerStatus.Playing -> Icons.Default.Pause
+            PlayerStatus.Finished -> Icons.Default.Replay
+            PlayerStatus.Error -> Icons.Default.Error
+            else -> Icons.Default.PlayArrow
+        }
+    val label =
+        when (status) {
+            PlayerStatus.Playing -> stringResource(R.string.vlc_player_pause)
+            PlayerStatus.Finished -> stringResource(R.string.vlc_player_restart)
+            PlayerStatus.Error -> stringResource(R.string.vlc_player_error)
+            else -> stringResource(R.string.vlc_player_play)
+        }
 
     IconButton(
         onClick = onClick,
@@ -338,10 +347,11 @@ private fun TrackSelectionDialog(
     onSelect: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val title = when (type) {
-        TrackDialog.Audio -> stringResource(R.string.vlc_player_change_audio)
-        TrackDialog.Subtitles -> stringResource(R.string.vlc_player_change_subtitle)
-    }
+    val title =
+        when (type) {
+            TrackDialog.Audio -> stringResource(R.string.vlc_player_change_audio)
+            TrackDialog.Subtitles -> stringResource(R.string.vlc_player_change_subtitle)
+        }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -349,10 +359,11 @@ private fun TrackSelectionDialog(
             Column {
                 for (track in tracks) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelect(track.id) }
-                            .padding(vertical = 4.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { onSelect(track.id) }
+                                .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(

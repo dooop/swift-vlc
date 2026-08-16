@@ -70,9 +70,10 @@ private fun VLCPlayerSampleApp() {
         val currentUrl = playingUrl
         if (currentUrl == null) {
             Column(
-                modifier = Modifier
-                    .safeDrawingPadding()
-                    .padding(24.dp),
+                modifier =
+                    Modifier
+                        .safeDrawingPadding()
+                        .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(
@@ -91,9 +92,10 @@ private fun VLCPlayerSampleApp() {
                     },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.sample_url_label)) },
-                    supportingText = validationError?.let { message ->
-                        { Text(message) }
-                    },
+                    supportingText =
+                        validationError?.let { message ->
+                            { Text(message) }
+                        },
                     isError = validationError != null,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
@@ -108,32 +110,36 @@ private fun VLCPlayerSampleApp() {
             }
         } else {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .safeDrawingPadding(),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .safeDrawingPadding(),
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
                 ) {
                     TextButton(onClick = { playingUrl = null }) {
                         Text(stringResource(R.string.sample_change_url))
                     }
                     Text(
                         text = currentUrl,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(12.dp),
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .padding(12.dp),
                         maxLines = 1,
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
                 VLCPlayer(
                     url = Uri.parse(currentUrl),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
                 )
             }
         }
