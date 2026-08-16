@@ -49,6 +49,13 @@ jobs:
       # No cache on purpose: a release must prove that a cold resolve of the
       # published binary targets succeeds, which is also what validates their
       # checksums.
+      - name: Resolve Swift package
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -scheme swift-vlc-player-Package \
+            -derivedDataPath .derivedData \
+            -quiet
+
       - name: Build (${{ matrix.name }})
         run: |
           xcodebuild build \
