@@ -32,13 +32,19 @@ internal class VLCPlayerController(
 ) : AutoCloseable {
     private val appContext = context.applicationContext
     private val preferences = appContext.getSharedPreferences(POSITIONS_STORE, Context.MODE_PRIVATE)
-    private val libVlc = LibVLC(appContext, mutableListOf("--sub-text-scale=$subtitleScale"))
+    // LibVLC construction touches the native library directly and can fail with an
+    // UnsatisfiedLinkError (missing/incompatible .so) or an IllegalStateException, neither of
+    // which the app can prevent — surface it as a player error instead of crashing.
+    private val libVlc: LibVLC? = try {
+        LibVLC(appContext, mutableListOf("--sub-text-scale=$subtitleScale"))
+    } catch (e: Throwable) {
+        null
+    }
 
     private var currentUrl: Uri? = null
     private var player: MediaPlayer? = null
     private var surfaceView: SurfaceView? = null
     private var pendingPosition: Float? = null
-    private var intentionalStop = false
 
     var status by mutableStateOf(PlayerStatus.Loading)
         private set
@@ -60,6 +66,12 @@ internal class VLCPlayerController(
         get() = status == PlayerStatus.Playing
 
     fun start(url: Uri) {
+        val vlc = libVlc
+        if (vlc == null) {
+            status = PlayerStatus.Error
+            return
+        }
+
         if (player != null && currentUrl == url) {
             play()
             return
@@ -71,12 +83,12 @@ internal class VLCPlayerController(
         pendingPosition = position
         status = PlayerStatus.Loading
 
-        val newPlayer = MediaPlayer(libVlc)
-        newPlayer.setEventListener(::onPlayerEvent)
+        val newPlayer = MediaPlayer(vlc)
+        newPlayer.setEventListener { event -> onPlayerEvent(newPlayer, event) }
         player = newPlayer
         attachSurfaceIfPossible()
 
-        val media = Media(libVlc, url)
+        val media = Media(vlc, url)
         media.setHWDecoderEnabled(true, false)
         newPlayer.media = media
         media.release()
@@ -141,22 +153,20 @@ internal class VLCPlayerController(
 
     fun unload(savePosition: Boolean = true) {
         if (savePosition) savePosition()
-        intentionalStop = true
         player?.let { currentPlayer ->
             if (currentPlayer.vlcVout.areViewsAttached()) currentPlayer.vlcVout.detachViews()
-            currentPlayer.stop()
             currentPlayer.setEventListener(null)
+            currentPlayer.stop()
             currentPlayer.release()
         }
         player = null
-        intentionalStop = false
         audioTracks.clear()
         subtitleTracks.clear()
     }
 
     override fun close() {
         unload()
-        libVlc.release()
+        libVlc?.release()
     }
 
     private fun attachSurfaceIfPossible() {
@@ -178,8 +188,14 @@ internal class VLCPlayerController(
         preferences.edit().putFloat(url.toString(), position.coerceIn(0f, 1f)).apply()
     }
 
-    private fun onPlayerEvent(event: MediaPlayer.Event) {
-        val currentPlayer = player ?: return
+    /**
+     * `source` is the exact [MediaPlayer] this callback was registered on. Events are delivered
+     * asynchronously off the calling thread, so by the time one arrives, [player] may already have
+     * been unloaded or replaced (e.g. during [restart]). Comparing against the live [player] instead
+     * of a boolean flag discards such stale events regardless of delivery timing.
+     */
+    private fun onPlayerEvent(source: MediaPlayer, event: MediaPlayer.Event) {
+        val currentPlayer = player?.takeIf { it === source } ?: return
         when (event.type) {
             MediaPlayer.Event.Opening -> status = PlayerStatus.Loading
             MediaPlayer.Event.Buffering -> {
@@ -196,7 +212,7 @@ internal class VLCPlayerController(
             MediaPlayer.Event.Paused -> status = PlayerStatus.Paused
             MediaPlayer.Event.Stopped,
             MediaPlayer.Event.EndReached,
-            -> if (!intentionalStop) status = PlayerStatus.Finished
+            -> status = PlayerStatus.Finished
             MediaPlayer.Event.EncounteredError -> status = PlayerStatus.Error
             MediaPlayer.Event.TimeChanged -> {
                 time = event.timeChanged.coerceAtLeast(0L)
@@ -222,17 +238,22 @@ internal class VLCPlayerController(
     private fun MutableList<PlayerTrack>.replaceWith(
         tracks: Array<out MediaPlayer.TrackDescription>,
     ) {
+        val incoming = tracks.map { PlayerTrack(it.id, it.name) }
+        val disabledLabel = appContext.getString(R.string.vlc_player_disable)
         clear()
-        if (tracks.isNotEmpty() && tracks.none { it.id == DISABLED_TRACK_ID }) {
-            add(PlayerTrack(DISABLED_TRACK_ID, appContext.getString(R.string.vlc_player_disable)))
-        }
-        addAll(tracks.map { PlayerTrack(it.id, it.name) })
+        addAll(buildTrackList(incoming, DISABLED_TRACK_ID, disabledLabel))
     }
 
     private companion object {
         const val POSITIONS_STORE = "vlcPlayerPositions"
         const val DISABLED_TRACK_ID = -1
     }
+}
+
+/** Prepends a "disable" placeholder to [tracks], unless one is already present or the list is empty. */
+internal fun buildTrackList(tracks: List<PlayerTrack>, disabledId: Int, disabledLabel: String): List<PlayerTrack> {
+    if (tracks.isEmpty() || tracks.any { it.id == disabledId }) return tracks
+    return listOf(PlayerTrack(disabledId, disabledLabel)) + tracks
 }
 
 internal fun formatPlayerTime(milliseconds: Long): String {

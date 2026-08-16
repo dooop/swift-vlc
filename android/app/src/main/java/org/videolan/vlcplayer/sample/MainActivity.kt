@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import org.videolan.vlcplayer.VLCPlayer
@@ -49,12 +50,13 @@ private fun VLCPlayerSampleApp() {
     var urlText by rememberSaveable { mutableStateOf(SAMPLE_VIDEO_URL) }
     var playingUrl by rememberSaveable { mutableStateOf<String?>(null) }
     var validationError by rememberSaveable { mutableStateOf<String?>(null) }
+    val urlErrorMessage = stringResource(R.string.sample_url_error)
 
     fun play() {
         val candidate = urlText.trim()
         val scheme = Uri.parse(candidate).scheme?.lowercase()
         if (candidate.isEmpty() || scheme !in SUPPORTED_SCHEMES) {
-            validationError = "Enter a complete HTTP(S), RTSP, RTMP, file, or content URI."
+            validationError = urlErrorMessage
             return
         }
         validationError = null
@@ -74,11 +76,11 @@ private fun VLCPlayerSampleApp() {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(
-                    text = "VLC Player",
+                    text = stringResource(R.string.sample_title),
                     style = MaterialTheme.typography.headlineMedium,
                 )
                 Text(
-                    text = "Enter a direct media or stream URL. The sample URL is ready to play.",
+                    text = stringResource(R.string.sample_description),
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 OutlinedTextField(
@@ -88,7 +90,7 @@ private fun VLCPlayerSampleApp() {
                         validationError = null
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Media URL") },
+                    label = { Text(stringResource(R.string.sample_url_label)) },
                     supportingText = validationError?.let { message ->
                         { Text(message) }
                     },
@@ -101,7 +103,7 @@ private fun VLCPlayerSampleApp() {
                     onClick = { play() },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("Play with VLC")
+                    Text(stringResource(R.string.sample_play))
                 }
             }
         } else {
@@ -116,7 +118,7 @@ private fun VLCPlayerSampleApp() {
                         .padding(horizontal = 8.dp),
                 ) {
                     TextButton(onClick = { playingUrl = null }) {
-                        Text("Change URL")
+                        Text(stringResource(R.string.sample_change_url))
                     }
                     Text(
                         text = currentUrl,

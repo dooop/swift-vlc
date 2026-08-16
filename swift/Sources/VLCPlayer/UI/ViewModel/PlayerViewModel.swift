@@ -126,7 +126,7 @@ class PlayerViewModel: NSObject, ObservableObject {
     subtitleTracks = tracks
   }
 
-  private func tracksBy(names: [Any], indexes: [Any]) -> [PlayerTrack] {
+  func tracksBy(names: [Any], indexes: [Any]) -> [PlayerTrack] {
     guard names.count == indexes.count else {
       return []
     }
