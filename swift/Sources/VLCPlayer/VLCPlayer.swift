@@ -5,6 +5,7 @@
 //  Created by Dominic Opitz on 01.06.24.
 //
 
+import Combine
 import SwiftUI
 @_exported import VLC
 
