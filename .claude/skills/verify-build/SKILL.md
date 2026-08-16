@@ -19,13 +19,13 @@ embed VLCKit in its xctest bundle. Use Xcode 26 or newer for builds and executab
 swift package dump-package
 
 for platform in macos ios tvos; do
-  xcodebuild build -scheme vlc-player-Package \
+  xcodebuild build -scheme swift-vlc-player-Package \
     -destination "$(swift/Scripts/xcode-destination.sh "$platform" build)" \
     -derivedDataPath .derivedData -quiet
 done
 
 for platform in macos ios tvos; do
-  xcodebuild test -scheme vlc-player-Package \
+  xcodebuild test -scheme swift-vlc-player-Package \
     -destination "$(swift/Scripts/xcode-destination.sh "$platform")" \
     -derivedDataPath .derivedData -quiet
 done

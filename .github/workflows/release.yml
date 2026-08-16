@@ -52,7 +52,7 @@ jobs:
       - name: Build (${{ matrix.name }})
         run: |
           xcodebuild build \
-            -scheme vlc-player-Package \
+            -scheme swift-vlc-player-Package \
             -destination "${{ steps.destinations.outputs.build }}" \
             -derivedDataPath .derivedData \
             -quiet
@@ -60,7 +60,7 @@ jobs:
       - name: Test (${{ matrix.name }})
         run: |
           xcodebuild test \
-            -scheme vlc-player-Package \
+            -scheme swift-vlc-player-Package \
             -destination "${{ steps.destinations.outputs.test }}" \
             -derivedDataPath .derivedData \
             -quiet
