@@ -43,7 +43,7 @@ Follow `verify-android` and run its full suite:
 
 ```bash
 ./gradlew :app:assembleDebug :vlc-player:assembleRelease \
-  :vlc-player:lintDebug :vlc-player:testDebugUnitTest
+  :vlc-player:lintDebug :vlc-player:testDebugUnitTest ktlintCheck
 ```
 
 ## Scope

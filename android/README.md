@@ -73,10 +73,16 @@ root:
 # Library compilation and lint
 ./gradlew :vlc-player:assembleDebug :vlc-player:lintDebug
 
+# Kotlin style check (ktlint)
+./gradlew ktlintCheck
+
 # Full local Android verification, including the sample and release AAR
 ./gradlew :app:assembleDebug :vlc-player:assembleRelease \
-  :vlc-player:lintDebug :vlc-player:testDebugUnitTest
+  :vlc-player:lintDebug :vlc-player:testDebugUnitTest ktlintCheck
 ```
+
+Kotlin formatting is enforced by [ktlint](https://github.com/JLLeitschuh/ktlint-gradle) via
+`ktlintCheck` in CI. Run `./gradlew ktlintFormat` locally to apply fixes.
 
 The release AAR is written to `android/vlc-player/build/outputs/aar/vlc-player-release.aar`; the
 sample APK is under `android/app/build/outputs/apk/debug/`.

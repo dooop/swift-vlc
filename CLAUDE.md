@@ -38,7 +38,7 @@ Android verification is:
 
 ```bash
 ./gradlew :app:assembleDebug :vlc-player:assembleRelease \
-  :vlc-player:lintDebug :vlc-player:testDebugUnitTest
+  :vlc-player:lintDebug :vlc-player:testDebugUnitTest ktlintCheck
 ```
 
 ## Swift rules
@@ -69,6 +69,8 @@ keys, covered by `swift/Tests/VLCPlayerTests/LocalizationTests.swift`. Use the
 - Put library resources under `android/vlc-player/src/main/res`; sample resources belong to
   `android/app/src/main/res`. Use the `add-android-localized-string` skill for UI text.
 - Keep dependency versions in `gradle/libs.versions.toml`, not scattered through module files.
+- Format Kotlin with ktlint (`org.jlleitschuh.gradle.ktlint`, applied to `:app` and `:vlc-player`).
+  Run `./gradlew ktlintFormat` locally and `./gradlew ktlintCheck` before finishing, matching CI.
 
 ## VLCKit release assets
 
