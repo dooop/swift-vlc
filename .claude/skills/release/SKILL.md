@@ -13,23 +13,10 @@ Versions are plain `X.Y.Z` tags (no `v` prefix) — SwiftPM consumers resolve th
 Never tag before these hold:
 
 1. `main` is clean and up to date; the full Apple and Android build/test matrix passes
-   (`verify-build` skill).
-2. `Package.swift`'s `binaryBaseURL` points at a tag whose GitHub release **has all three assets**:
-
-   ```bash
-   swift package dump-package \
-     | jq -r '.targets[] | select(.type == "binary") | .url' \
-     | while read -r url; do
-         printf '%s -> %s\n' "$url" "$(curl -sSLo /dev/null -w '%{http_code}' "$url")"
-       done
-   ```
-
-   All three must be `200`.
-   - VLCKit unchanged since the last release → leave `binaryBaseURL` on the older tag. This is
-     normal and intended (0.3.1 reuses 0.3.0's assets).
-   - VLCKit changed → the assets for the new tag must already exist. Run the `update-vlckit` skill
-     first; do not tag before its PR is merged.
-3. The root, Swift, and Android README version examples still make sense, and the release workflow
+   (`verify-build` skill). A cold `swift package dump-package` / `xcodebuild` resolve is part of
+   that matrix and validates the upstream VLCKit dependency's checksum — VLCKit hosts its own
+   binary target now, so there is nothing of ours to check or repackage.
+2. The root, Swift, and Android README version examples still make sense, and the release workflow
    produces `vlc-player-android-<version>.aar`.
 
 ## Cut it
@@ -42,9 +29,6 @@ git push origin <version>
 `.github/workflows/release.yml` then re-runs the whole matrix against the tag and creates the
 GitHub release with generated notes (pre-release for `0.x`). If the workflow fails, delete the tag
 locally and remotely, fix, re-tag — do not hand-edit the release.
-
-If a draft release for this tag already exists because `update-vlckit` uploaded assets into it, the
-workflow publishes that draft instead of creating a new one; its assets are kept.
 
 ## Release notes
 

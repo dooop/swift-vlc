@@ -36,9 +36,6 @@ jobs:
       - name: Select Xcode
         run: .github/scripts/select-xcode.sh
 
-      - name: Binary targets are published
-        run: .github/scripts/check-binary-targets.sh
-
       - name: Resolve destinations
         id: destinations
         run: |
@@ -47,8 +44,8 @@ jobs:
           echo "test=$(swift/Scripts/xcode-destination.sh '${{ matrix.platform }}')" >> "$GITHUB_OUTPUT"
 
       # No cache on purpose: a release must prove that a cold resolve of the
-      # published binary targets succeeds, which is also what validates their
-      # checksums.
+      # upstream VLCKit binary target succeeds, which is also what validates
+      # its checksum.
       - name: Build (${{ matrix.name }})
         run: |
           xcodebuild build \
@@ -130,9 +127,8 @@ jobs:
             0.* | *-*) prerelease="true" ;;
           esac
 
-          # update-vlckit uploads the xcframework archives into a draft release
-          # for this tag. Publish that draft instead of creating a second one so
-          # the assets are kept.
+          # Idempotent re-run: edit the existing release instead of failing to
+          # create a duplicate one.
           if gh release view "$VERSION" >/dev/null 2>&1; then
             echo "Release $VERSION exists — publishing it."
             gh release edit "$VERSION" --draft=false --prerelease="$prerelease"

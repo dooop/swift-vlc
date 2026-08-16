@@ -8,11 +8,12 @@
 import Foundation
 
 struct PlayerTrack: Identifiable, Hashable {
-  let index: Int32
-  var id: Int32 { index }
+  static let disabledId = "vlc-player.disabled"
+
+  let id: String
   var name: String
 
   static var disable: PlayerTrack {
-    return PlayerTrack(index: -1, name: String(localized: .disable))
+    PlayerTrack(id: disabledId, name: String(localized: .disable))
   }
 }

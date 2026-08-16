@@ -57,7 +57,7 @@ struct PlayerTrackButton: View {
 
   PlayerTrackButton(
     selection: $selection,
-    tracks: .constant([.disable, PlayerTrack(index: 0, name: "English")]),
+    tracks: .constant([.disable, PlayerTrack(id: "0", name: "English")]),
     title: .audio,
     message: .changeAudioTrack,
     systemImage: "speaker.fill"

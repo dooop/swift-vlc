@@ -2,9 +2,9 @@
 //  VLCLinkageTests.swift
 //  vlc-player
 //
-//  Smoke test for the platform-specific VLCKit binary target: if the
-//  xcframework for the current platform is missing, mis-linked or fails to
-//  load at runtime, these tests fail before anything else does.
+//  Smoke test for the VLCKit binary target: if the universal xcframework is
+//  missing, mis-linked or fails to load at runtime, these tests fail before
+//  anything else does.
 //
 
 import Foundation
@@ -25,8 +25,8 @@ struct VLCLinkageTests {
   }
 
   @Test("VLCMedia can be created from a URL without starting playback")
-  func mediaCanBeCreatedFromURL() {
-    let media = VLCMedia(url: URL(string: "https://example.com/video.mp4")!)
+  func mediaCanBeCreatedFromURL() throws {
+    let media = try #require(VLCMedia(url: URL(string: "https://example.com/video.mp4")!))
     #expect(media.url?.absoluteString == "https://example.com/video.mp4")
   }
 }

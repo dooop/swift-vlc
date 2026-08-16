@@ -2,7 +2,8 @@
 
 The Swift package provides two library products for macOS 15+, iOS 18+, and tvOS 18+:
 
-- `VLC` re-exports the platform-specific VLCKit module (`VLCKit`, `MobileVLCKit`, or `TVVLCKit`).
+- `VLC` re-exports upstream VLCKit 4's unified `VLCKit` module, which now covers macOS, iOS, and
+  tvOS from a single binary (VLCKit 4 dropped the separate `MobileVLCKit`/`TVVLCKit` modules).
 - `VLCPlayer` provides a SwiftUI `VLCPlayer(url:)` with playback controls and re-exports `VLC`.
 
 The manifest remains at [`../Package.swift`](../Package.swift), while all Swift source, tests,
@@ -33,7 +34,8 @@ For a local checkout, reference the repository root because that is where `Packa
 .package(path: "../vlc-player")
 ```
 
-Remote binary targets download the VLCKit xcframework archives automatically.
+`Package.swift` depends on upstream [VLCKit](https://github.com/videolan/vlckit)'s own Swift
+package, which resolves its universal xcframework as a remote binary target automatically.
 
 ## Usage
 
@@ -68,13 +70,10 @@ and subtitle-track controls.
 
 ## Layout
 
-- `swift/Sources/VLC/` — platform-specific VLCKit re-export
+- `swift/Sources/VLC/` — unified VLCKit re-export
 - `swift/Sources/VLCPlayer/` — SwiftUI player, view model, models, views, and string catalog
 - `swift/Tests/` — Swift Testing suites
 - `swift/Scripts/xcode-destination.sh` — resolves portable Xcode destinations
-- `swift/Scripts/update-vlc-frameworks.sh` — downloads xcframeworks into `swift/Frameworks/`
-- `swift/Scripts/package-vlc-frameworks.sh` — packages release archives into root `dist/`
-- `swift/Scripts/vlc-frameworks.conf` — upstream archive URLs and checksums
 
 ## Development
 
@@ -97,7 +96,7 @@ for platform in macos ios tvos; do
     -derivedDataPath .derivedData -quiet
 done
 
-xcrun swift-format lint --configuration swift/.swift-format \
+xcrun swift-format lint --configuration .swift-format \
   --recursive --strict swift/Sources swift/Tests Package.swift
 ```
 
@@ -105,16 +104,9 @@ Xcode generates `LocalizedStringResource` symbols directly from
 `swift/Sources/VLCPlayer/UI/Resources/Localizable.xcstrings`. Add each new key to that catalog and
 the localization tests, then use the generated member such as `.audio` in source code.
 
-## Local VLCKit framework tooling
+## Bumping VLCKit
 
-The checked-in package always uses remote binary targets. For inspecting or repackaging upstream
-frameworks locally:
-
-```bash
-swift/Scripts/update-vlc-frameworks.sh
-swift/Scripts/package-vlc-frameworks.sh --no-download
-```
-
-Override `FRAMEWORKS_DIR` or `DIST_DIR` when a different local location is needed. Never derive a
-published binary-target checksum from a newly re-zipped archive; the release workflow records the
-checksum of the archive that was actually uploaded.
+`Package.swift`'s `dependencies` array pins an `exact` upstream VLCKit tag (VLCKit 4 alphas are not
+semver-ordered in a way `from:`/`upToNextMajor` can safely track). To move to a newer tag, update
+that version string and re-resolve; upstream owns the binary target, its archive, and its checksum,
+so there is nothing to repackage or re-upload in this repository.

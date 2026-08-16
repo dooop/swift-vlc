@@ -28,11 +28,11 @@ jobs:
         run: .github/scripts/select-xcode.sh
 
       - name: swift-format lint
-        run: xcrun swift-format lint --configuration swift/.swift-format --recursive --strict swift/Sources swift/Tests Package.swift
+        run: xcrun swift-format lint --configuration .swift-format --recursive --strict swift/Sources swift/Tests Package.swift
 
       - name: swift-format produces no diff
         run: |
-          xcrun swift-format format --configuration swift/.swift-format --in-place --recursive swift/Sources swift/Tests Package.swift
+          xcrun swift-format format --configuration .swift-format --in-place --recursive swift/Sources swift/Tests Package.swift
           if ! git diff --exit-code; then
             echo "::error::Swift sources are not formatted. See swift/README.md."
             exit 1
@@ -47,11 +47,9 @@ jobs:
       - name: Select Xcode
         run: .github/scripts/select-xcode.sh
 
-      - name: Binary targets are published
-        run: .github/scripts/check-binary-targets.sh
-
       # Generated string-catalog symbols are an Xcode build feature. The package
       # is built and tested through xcodebuild below; this job validates its manifest.
+      # A cold resolve here also validates the upstream VLCKit binary target's checksum.
       - name: Validate package manifest
         run: swift package dump-package >/dev/null
 
