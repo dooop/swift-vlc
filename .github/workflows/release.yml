@@ -59,11 +59,8 @@ jobs:
 
       - name: Test (${{ matrix.name }})
         run: |
-          xcodebuild test \
-            -scheme swift-vlc-player-Package \
-            -destination "${{ steps.destinations.outputs.test }}" \
-            -derivedDataPath .derivedData \
-            -quiet
+          .github/scripts/xcodebuild-test.sh \
+            "${{ steps.destinations.outputs.test }}"
 
   verify-android:
     name: Verify Android
