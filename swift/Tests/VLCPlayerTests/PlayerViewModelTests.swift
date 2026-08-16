@@ -14,7 +14,8 @@ struct PlayerViewModelTests {
   func mapsNamesAndIndexes() {
     let viewModel = PlayerViewModel()
     let tracks = viewModel.tracksBy(names: ["English", "Deutsch"], indexes: [Int32(0), Int32(1)])
-    #expect(tracks == [PlayerTrack(index: 0, name: "English"), PlayerTrack(index: 1, name: "Deutsch")])
+    #expect(
+      tracks == [PlayerTrack(index: 0, name: "English"), PlayerTrack(index: 1, name: "Deutsch")])
   }
 
   @Test("returns no tracks when names and indexes disagree in count")
