@@ -91,7 +91,7 @@ struct PlayerControls: View {
       }
 
       Slider(
-        value: $position,
+        value: sliderPosition,
         in: 0...1,
         onEditingChanged: editingChanged
       )
@@ -105,19 +105,6 @@ struct PlayerControls: View {
       .font(.caption)
       .foregroundColor(.white)
     }
-    .onChange(
-      of: position,
-      { oldValue, newValue in
-        if player.position != newValue {
-          player.seek(to: newValue)
-        }
-      }
-    )
-    .onReceive(player.$position) { newValue in
-      if position != newValue {
-        position = newValue
-      }
-    }
     .padding()
     .background(
       .black.opacity(0.6),
@@ -125,8 +112,23 @@ struct PlayerControls: View {
     )
   }
 
-  private func editingChanged(_ editing: Bool) {
-    self.editing = editing
+  private var sliderPosition: Binding<Float> {
+    Binding(
+      get: {
+        editing ? position : player.position
+      },
+      set: { newValue in
+        position = newValue
+        player.seek(to: newValue)
+      }
+    )
+  }
+
+  private func editingChanged(_ isEditing: Bool) {
+    if isEditing {
+      position = player.position
+    }
+    editing = isEditing
   }
 }
 

@@ -22,9 +22,7 @@ import VLC
       return viewController
     }
 
-    func updateNSViewController(_ viewController: NSViewController, context: Context) {
-      vlc.drawable = viewController.view
-    }
+    func updateNSViewController(_ viewController: NSViewController, context: Context) {}
   }
 #else
   struct PlayerView: UIViewControllerRepresentable {
@@ -40,9 +38,7 @@ import VLC
       return viewController
     }
 
-    func updateUIViewController(_ viewController: UIViewController, context: Context) {
-      vlc.drawable = viewController.view
-    }
+    func updateUIViewController(_ viewController: UIViewController, context: Context) {}
   }
 #endif
 

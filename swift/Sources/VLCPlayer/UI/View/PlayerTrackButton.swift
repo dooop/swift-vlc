@@ -22,7 +22,6 @@ struct PlayerTrackButton: View {
     Button(
       action: {
         showOptions = true
-        onEditingChanged?(true)
       },
       label: {
         Image(systemName: systemImage)
@@ -38,16 +37,17 @@ struct PlayerTrackButton: View {
           selection = track
           onChange?(track)
           showOptions = false
-          onEditingChanged?(false)
         }
       }
 
       Button(.cancel, role: .cancel) {
         showOptions = false
-        onEditingChanged?(false)
       }
     } message: {
       Text(message)
+    }
+    .onChange(of: showOptions) { _, isPresented in
+      onEditingChanged?(isPresented)
     }
   }
 }

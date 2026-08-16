@@ -65,7 +65,6 @@ import SwiftUI
     var value: Float = 0 {
       didSet {
         updateSliderPosition()
-        onValueChanged?(value)
       }
     }
 
@@ -215,6 +214,7 @@ import SwiftUI
         onEditingChanged?(false)
       case .changed:
         value = newValue
+        onValueChanged?(newValue)
         // Reset translation so next call is relative
         gesture.setTranslation(.zero, in: self)
       default:

@@ -5,7 +5,6 @@
 //  Created by Dominic Opitz on 01.06.24.
 //
 
-import Combine
 import SwiftUI
 @_exported import VLC
 
@@ -14,8 +13,7 @@ public struct VLCPlayer: View {
 
   @StateObject private var viewModel = PlayerViewModel()
   @State private var toolbarVisibility = Visibility.automatic
-  private let timer = Timer.publish(every: 5, on: .main, in: .common)
-  @State private var timerConnection: Cancellable?
+  @State private var controlsTimerTask: Task<Void, Never>?
   @State private var editing: Bool = false
   @State private var showControls = true
   #if os(tvOS)
@@ -52,6 +50,7 @@ public struct VLCPlayer: View {
       startPlayer()
     }
     .onDisappear {
+      cancelTimer()
       stopPlayer()
       setIdleTimerDisabled(false)
       setCursorHidden(false)
@@ -76,9 +75,6 @@ public struct VLCPlayer: View {
       @unknown default:
         break
       }
-    }
-    .onReceive(timer) { _ in
-      animateControls(false)
     }
     .onChange(of: editing) {
       editing ? viewModel.pause() : viewModel.play()
@@ -150,13 +146,23 @@ public struct VLCPlayer: View {
   }
 
   private func cancelTimer() {
-    timerConnection?.cancel()
-    timerConnection = nil
+    controlsTimerTask?.cancel()
+    controlsTimerTask = nil
   }
 
   private func restartTimer() {
     cancelTimer()
-    timerConnection = timer.connect()
+    controlsTimerTask = Task { @MainActor in
+      do {
+        try await ContinuousClock().sleep(for: .seconds(5))
+      } catch {
+        return
+      }
+
+      controlsTimerTask = nil
+      guard viewModel.playing, !editing else { return }
+      animateControls(false)
+    }
   }
 
   private func animateControls(_ visible: Bool) {
@@ -196,6 +202,12 @@ public struct VLCPlayer: View {
       .focused($hiddenControlIsFocused)
       .onAppear {
         hiddenControlIsFocused = true
+      }
+      .onExitCommand {
+        animateControls(true)
+        if viewModel.playing {
+          restartTimer()
+        }
       }
     #elseif os(macOS)
       .buttonStyle(PlainButtonStyle())

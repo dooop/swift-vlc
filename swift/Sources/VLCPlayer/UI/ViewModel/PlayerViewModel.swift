@@ -8,6 +8,13 @@
 import SwiftUI
 import VLC
 
+private struct PlayerProgress {
+  var position: Float = 0
+  var duration: Int32 = 0
+  var currentTime = ""
+  var remainingTime = ""
+}
+
 @MainActor
 class PlayerViewModel: NSObject, ObservableObject {
   private var url: URL?
@@ -19,14 +26,16 @@ class PlayerViewModel: NSObject, ObservableObject {
   @Published private(set) var vlcPlayer: VLCMediaPlayer? = nil
   @Published private(set) var state = PlayerState.loading
   @Published private(set) var playing = false
-  @Published private(set) var currentTime = ""
-  @Published private(set) var remainingTime = ""
-  @Published private(set) var duration: Int32 = 0
-  @Published private(set) var position: Float = 0
+  @Published private var progress = PlayerProgress()
   @Published var audio: PlayerTrack = .disable
   @Published var audioTracks: [PlayerTrack] = []
   @Published var subtitle: PlayerTrack = .disable
   @Published var subtitleTracks: [PlayerTrack] = []
+
+  var currentTime: String { progress.currentTime }
+  var remainingTime: String { progress.remainingTime }
+  var duration: Int32 { progress.duration }
+  var position: Float { progress.position }
 
   func load(media url: URL) {
     self.url = url
@@ -35,7 +44,7 @@ class PlayerViewModel: NSObject, ObservableObject {
     vlcPlayer?.media = VLCMedia(url: url)
     if let positions = try? JSONDecoder().decode([String: Float].self, from: positionsData) {
       self.positions = positions
-      self.position = positions[url.path()] ?? 0
+      progress.position = positions[url.path()] ?? 0
     }
   }
 
@@ -61,7 +70,10 @@ class PlayerViewModel: NSObject, ObservableObject {
 
   func seek(to position: Float) {
     vlcPlayer?.position = position
-    currentTime = VLCTime(int: Int32(position * Float(self.duration))).stringValue
+    var updatedProgress = progress
+    updatedProgress.position = position
+    updatedProgress.currentTime = VLCTime(int: Int32(position * Float(duration))).stringValue
+    progress = updatedProgress
   }
 
   func changeAudio(track: PlayerTrack) {
@@ -103,10 +115,12 @@ class PlayerViewModel: NSObject, ObservableObject {
     currentTime: String,
     remainingTime: String
   ) {
-    self.position = position
-    self.duration = duration
-    self.currentTime = currentTime
-    self.remainingTime = remainingTime
+    progress = PlayerProgress(
+      position: position,
+      duration: duration,
+      currentTime: currentTime,
+      remainingTime: remainingTime
+    )
   }
 
   private func updateAudioTracks() {
