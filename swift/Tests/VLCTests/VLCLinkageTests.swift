@@ -25,8 +25,8 @@ struct VLCLinkageTests {
   }
 
   @Test("VLCMedia can be created from a URL without starting playback")
-  func mediaCanBeCreatedFromURL() {
-    let media = VLCMedia(url: URL(string: "https://example.com/video.mp4")!)
+  func mediaCanBeCreatedFromURL() throws {
+    let media = try #require(VLCMedia(url: URL(string: "https://example.com/video.mp4")!))
     #expect(media.url?.absoluteString == "https://example.com/video.mp4")
   }
 }
