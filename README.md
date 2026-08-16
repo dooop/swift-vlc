@@ -58,9 +58,25 @@ dependencies {
 }
 ```
 
-Each release also publishes `vlc-player-android-<version>.aar`. See
-[android/README.md](android/README.md) for Compose usage, AAR dependencies, sample-app commands,
-localization, and Android verification.
+Each release publishes the Android library as `io.github.dooop:vlc-player:<version>` in GitHub
+Packages. It also attaches the standalone AAR and a downloadable Maven-repository zip to the GitHub
+release. See [android/README.md](android/README.md) for repository setup, Compose usage, sample-app
+commands, localization, and Android verification.
+
+## Creating a release
+
+Run the **Release** workflow from GitHub Actions and enter a version such as `0.5.0` (without a `v`
+prefix). After all Apple and Android checks pass, the workflow:
+
+1. creates an annotated tag for the selected commit,
+2. creates or publishes the GitHub release with generated notes,
+3. uploads both `vlc-player-android-<version>.aar` and
+   `vlc-player-maven-<version>.zip` as release assets, and
+4. publishes `io.github.dooop:vlc-player:<version>` to GitHub Packages.
+
+Pushing a matching SemVer tag manually remains supported and runs the same verification and publish
+steps. Versions are immutable: do not reuse a version after it has been published to GitHub
+Packages.
 
 ## Development checks
 

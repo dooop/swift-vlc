@@ -41,7 +41,43 @@ fun PlayerScreen() {
 selection, five-second control auto-hide, per-URI playback-position persistence, screen-on handling,
 and lifecycle behavior. Pass `subtitleScale` to change subtitle size from its default `100` percent.
 
-## Using the release AAR
+## Maven dependency
+
+Releases are published to GitHub Packages with Gradle module metadata and a POM, so transitive
+Compose, lifecycle, and LibVLC dependencies are resolved automatically:
+
+```kotlin
+repositories {
+    google()
+    mavenCentral()
+    maven {
+        url = uri("https://maven.pkg.github.com/dooop/vlc-player")
+        credentials {
+            username = providers.gradleProperty("gpr.user").orNull
+            password = providers.gradleProperty("gpr.key").orNull
+        }
+    }
+}
+
+dependencies {
+    implementation("io.github.dooop:vlc-player:0.4.0")
+}
+```
+
+GitHub Packages requires authentication when resolving Maven packages. Put your GitHub username and
+a classic personal access token with `read:packages` in the user-level `~/.gradle/gradle.properties`
+(never commit them):
+
+```properties
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.key=YOUR_GITHUB_TOKEN
+```
+
+Every GitHub release also contains `vlc-player-maven-<version>.zip`, a self-contained Maven
+repository for consumers that do not want to authenticate with GitHub Packages. Extract it and add
+its directory with `maven { url = uri("path/to/repository") }`.
+
+## Using the release AAR directly
 
 GitHub releases contain `vlc-player-android-<version>.aar`. It is a thin AAR, so a consumer using
 the file directly must also declare its runtime dependencies:
@@ -86,6 +122,15 @@ Kotlin formatting is enforced by [ktlint](https://github.com/JLLeitschuh/ktlint-
 
 The release AAR is written to `android/vlc-player/build/outputs/aar/vlc-player-release.aar`; the
 sample APK is under `android/app/build/outputs/apk/debug/`.
+
+To create the same Maven repository that is attached to a release, run:
+
+```bash
+./gradlew -PreleaseVersion=0.4.0 \
+  :vlc-player:publishReleasePublicationToReleaseBundleRepository
+```
+
+The repository is written to `android/vlc-player/build/maven-repository/`.
 
 ## Localization
 

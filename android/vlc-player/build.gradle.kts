@@ -1,3 +1,4 @@
+import org.gradle.api.publish.maven.MavenPublication
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -5,9 +6,10 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ktlint)
+    `maven-publish`
 }
 
-group = "org.videolan"
+group = "io.github.dooop"
 version = providers.gradleProperty("releaseVersion").getOrElse("0.0.0-SNAPSHOT")
 
 android {
@@ -26,6 +28,12 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+        }
+    }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
         }
     }
 
@@ -63,4 +71,54 @@ dependencies {
 
     debugImplementation(libs.compose.tooling)
     testImplementation(libs.junit)
+}
+
+publishing {
+    publications {
+        register<MavenPublication>("release") {
+            groupId = project.group.toString()
+            artifactId = "vlc-player"
+            version = project.version.toString()
+
+            afterEvaluate {
+                from(components["release"])
+            }
+
+            pom {
+                name.set("VLC Player for Android")
+                description.set("Jetpack Compose video player backed by LibVLC.")
+                url.set("https://github.com/dooop/vlc-player")
+                licenses {
+                    license {
+                        name.set("GNU Lesser General Public License v2.1")
+                        url.set("https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html")
+                        distribution.set("repo")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:https://github.com/dooop/vlc-player.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/dooop/vlc-player.git")
+                    url.set("https://github.com/dooop/vlc-player")
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "ReleaseBundle"
+            url = uri(layout.buildDirectory.dir("maven-repository"))
+        }
+
+        providers.environmentVariable("GITHUB_REPOSITORY").orNull?.let { repository ->
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/$repository")
+                credentials {
+                    username = providers.environmentVariable("GITHUB_ACTOR").orNull
+                    password = providers.environmentVariable("GITHUB_TOKEN").orNull
+                }
+            }
+        }
+    }
 }

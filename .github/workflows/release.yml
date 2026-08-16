@@ -1,13 +1,19 @@
 name: Release
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "SemVer release version without a v prefix (for example 1.2.3 or 1.2.3-rc.1)"
+        required: true
+        type: string
   push:
     tags:
       - "[0-9]+.[0-9]+.[0-9]+"
       - "[0-9]+.[0-9]+.[0-9]+-*"
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.version || github.ref_name }}
   cancel-in-progress: false
 
 permissions:
@@ -15,11 +21,52 @@ permissions:
 
 env:
   XCODE_APP: ""
+  RELEASE_VERSION: ${{ inputs.version || github.ref_name }}
 
 jobs:
+  validate:
+    name: Validate release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      commit: ${{ steps.release.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Validate version and commit
+        id: release
+        env:
+          VERSION: ${{ env.RELEASE_VERSION }}
+        run: |
+          set -euo pipefail
+
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$'; then
+            echo "::error::'$VERSION' is not a supported SemVer release version. Do not use a v prefix."
+            exit 1
+          fi
+
+          if [ "${{ github.event_name }}" = "push" ] && [ "$VERSION" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::The release version does not match the pushed tag."
+            exit 1
+          fi
+
+          if git rev-parse --verify --quiet "refs/tags/$VERSION" >/dev/null; then
+            tagged_commit=$(git rev-list -n 1 "$VERSION")
+            if [ "$tagged_commit" != "$GITHUB_SHA" ]; then
+              echo "::error::Tag $VERSION already points to $tagged_commit, not $GITHUB_SHA."
+              exit 1
+            fi
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "commit=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
   verify:
     name: Verify ${{ matrix.name }}
     runs-on: macos-26
+    needs: validate
     strategy:
       fail-fast: true
       matrix:
@@ -72,6 +119,7 @@ jobs:
   verify-android:
     name: Verify Android
     runs-on: ubuntu-latest
+    needs: validate
     steps:
       - uses: actions/checkout@v5
 
@@ -88,32 +136,40 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Build, lint, and test Android AAR
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
         run: |
           ./gradlew \
-            -PreleaseVersion="${{ github.ref_name }}" \
+            -PreleaseVersion="$VERSION" \
             :vlc-player:assembleRelease \
             :vlc-player:lintDebug \
-            :vlc-player:testDebugUnitTest
+            :vlc-player:testDebugUnitTest \
+            :vlc-player:publishReleasePublicationToReleaseBundleRepository
 
-      - name: Prepare release asset
+      - name: Prepare release assets
         env:
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ needs.validate.outputs.version }}
         run: |
+          set -euo pipefail
+          mkdir -p dist
           cp android/vlc-player/build/outputs/aar/vlc-player-release.aar \
-            "vlc-player-android-${VERSION}.aar"
+            "dist/vlc-player-android-${VERSION}.aar"
+          cd android/vlc-player/build/maven-repository
+          zip -qr "${GITHUB_WORKSPACE}/dist/vlc-player-maven-${VERSION}.zip" .
 
       - uses: actions/upload-artifact@v7
         with:
-          name: android-aar
-          path: vlc-player-android-${{ github.ref_name }}.aar
+          name: android-release
+          path: dist/*
           if-no-files-found: error
 
   publish:
     name: Publish release
     runs-on: ubuntu-latest
-    needs: [verify, verify-android]
+    needs: [validate, verify, verify-android]
     permissions:
       contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v5
         with:
@@ -121,13 +177,48 @@ jobs:
 
       - uses: actions/download-artifact@v8
         with:
-          name: android-aar
+          name: android-release
           path: dist
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v4
+
+      - name: Install Android SDK
+        run: sdkmanager "platforms;android-37.0" "build-tools;36.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Create or verify release tag
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          RELEASE_COMMIT: ${{ needs.validate.outputs.commit }}
+        run: |
+          set -euo pipefail
+          git fetch --force --tags origin
+
+          if git rev-parse --verify --quiet "refs/tags/$VERSION" >/dev/null; then
+            tagged_commit=$(git rev-list -n 1 "$VERSION")
+            if [ "$tagged_commit" != "$RELEASE_COMMIT" ]; then
+              echo "::error::Tag $VERSION already points to $tagged_commit, not $RELEASE_COMMIT."
+              exit 1
+            fi
+            echo "Tag $VERSION already points to the requested commit."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag --annotate "$VERSION" "$RELEASE_COMMIT" --message "Release $VERSION"
+            git push origin "refs/tags/$VERSION"
+          fi
 
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ needs.validate.outputs.version }}
+          RELEASE_COMMIT: ${{ needs.validate.outputs.commit }}
         run: |
           set -euo pipefail
 
@@ -142,17 +233,34 @@ jobs:
           # the assets are kept.
           if gh release view "$VERSION" >/dev/null 2>&1; then
             echo "Release $VERSION exists — publishing it."
-            gh release edit "$VERSION" --draft=false --prerelease="$prerelease"
+            gh api \
+              --method POST \
+              "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
+              -f tag_name="$VERSION" \
+              -f target_commitish="$RELEASE_COMMIT" \
+              --jq .body > release-notes.md
+            gh release edit "$VERSION" \
+              --draft=false \
+              --prerelease="$prerelease" \
+              --notes-file release-notes.md
           else
             echo "Creating release $VERSION."
             gh release create "$VERSION" \
               --title "$VERSION" \
               --generate-notes \
+              --target "$RELEASE_COMMIT" \
               --prerelease="$prerelease"
           fi
 
-          gh release upload "$VERSION" \
-            "dist/vlc-player-android-${VERSION}.aar" \
-            --clobber
+          gh release upload "$VERSION" dist/* --clobber
 
           gh release view "$VERSION"
+
+      - name: Publish Android library to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.validate.outputs.version }}
+        run: |
+          ./gradlew \
+            -PreleaseVersion="$VERSION" \
+            :vlc-player:publishReleasePublicationToGitHubPackagesRepository
