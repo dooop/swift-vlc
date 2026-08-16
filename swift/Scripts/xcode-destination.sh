@@ -19,8 +19,8 @@ Arguments:
   "build" -> a generic destination for compile-only builds
 
 Examples:
-  xcodebuild test  -scheme vlc-player-Package -destination "$(swift/Scripts/xcode-destination.sh ios)"
-  xcodebuild build -scheme vlc-player-Package -destination "$(swift/Scripts/xcode-destination.sh tvos build)"
+  xcodebuild test  -scheme swift-vlc-player-Package -destination "$(swift/Scripts/xcode-destination.sh ios)"
+  xcodebuild build -scheme swift-vlc-player-Package -destination "$(swift/Scripts/xcode-destination.sh tvos build)"
 EOF
 }
 

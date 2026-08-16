@@ -86,13 +86,13 @@ build feature, and `swift test` cannot load the embedded VLCKit framework:
 swift package dump-package
 
 for platform in macos ios tvos; do
-  xcodebuild build -scheme vlc-player-Package \
+  xcodebuild build -scheme swift-vlc-player-Package \
     -destination "$(swift/Scripts/xcode-destination.sh "$platform" build)" \
     -derivedDataPath .derivedData -quiet
 done
 
 for platform in macos ios tvos; do
-  xcodebuild test -scheme vlc-player-Package \
+  xcodebuild test -scheme swift-vlc-player-Package \
     -destination "$(swift/Scripts/xcode-destination.sh "$platform")" \
     -derivedDataPath .derivedData -quiet
 done
