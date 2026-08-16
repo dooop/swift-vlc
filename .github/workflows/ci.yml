@@ -14,13 +14,13 @@ permissions:
   contents: read
 
 env:
-  # Optional override, e.g. "/Applications/Xcode_16.4.app". Empty = the runner image default.
+  # Optional override, e.g. "/Applications/Xcode_26.6.app". Empty = the runner image default.
   XCODE_APP: ""
 
 jobs:
   format:
     name: Format
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v5
 
@@ -40,7 +40,7 @@ jobs:
 
   manifest:
     name: Manifest
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v5
 
@@ -50,17 +50,14 @@ jobs:
       - name: Binary targets are published
         run: .github/scripts/check-binary-targets.sh
 
-      # Guards swift/Sources/VLCPlayer/UI/LocalizedStrings.swift against drifting away
-      # from Localizable.xcstrings: only SwiftPM compiles that hand-written
-      # mirror, so a key added to the catalog alone breaks here.
-      # `swift test` cannot run — SwiftPM does not embed VLCKit into the xctest
-      # bundle; the tests run under xcodebuild in build-test.
-      - name: swift build (SwiftPM path)
-        run: swift build
+      # Generated string-catalog symbols are an Xcode build feature. The package
+      # is built and tested through xcodebuild below; this job validates its manifest.
+      - name: Validate package manifest
+        run: swift package dump-package >/dev/null
 
   build-test:
     name: ${{ matrix.name }}
-    runs-on: macos-15
+    runs-on: macos-26
     strategy:
       fail-fast: false
       matrix:
@@ -130,7 +127,7 @@ jobs:
       - uses: android-actions/setup-android@v4
 
       - name: Install Android SDK
-        run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
+        run: sdkmanager "platforms;android-37.0" "build-tools;36.0.0"
 
       - uses: gradle/actions/setup-gradle@v4
 

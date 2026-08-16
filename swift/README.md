@@ -78,12 +78,12 @@ and subtitle-track controls.
 
 ## Development
 
-Run all commands from the repository root. `swift build` is a useful SwiftPM smoke test, but
-`swift test` cannot load the embedded VLCKit framework. Run executable tests through `xcodebuild`:
+Run all commands from the repository root with Xcode 26 or newer. Validate the SwiftPM manifest
+directly, then build and test through `xcodebuild`; generated string-catalog symbols are an Xcode
+build feature, and `swift test` cannot load the embedded VLCKit framework:
 
 ```bash
 swift package dump-package
-swift build
 
 for platform in macos ios tvos; do
   xcodebuild build -scheme vlc-player-Package \
@@ -101,9 +101,9 @@ xcrun swift-format lint --configuration swift/.swift-format \
   --recursive --strict swift/Sources swift/Tests Package.swift
 ```
 
-The hand-written `swift/Sources/VLCPlayer/UI/LocalizedStrings.swift` mirrors Xcode-generated string
-symbols so `swift build` also works. Add each new key to the string catalog, that mirror, and the
-localization tests.
+Xcode generates `LocalizedStringResource` symbols directly from
+`swift/Sources/VLCPlayer/UI/Resources/Localizable.xcstrings`. Add each new key to that catalog and
+the localization tests, then use the generated member such as `.audio` in source code.
 
 ## Local VLCKit framework tooling
 

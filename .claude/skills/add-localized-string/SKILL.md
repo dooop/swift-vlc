@@ -12,13 +12,8 @@ translated to `de`. Never hard-code a display string in a view, and never add a 
 
 ## How the symbols work
 
-Every key exists **twice** and both have to be updated:
-
-1. Xcode's build system generates `LocalizedStringResource` members from the catalog into
-   `GeneratedStringSymbols_Localizable.swift` (used by `xcodebuild`).
-2. `swift/Sources/VLCPlayer/UI/LocalizedStrings.swift` mirrors them by hand behind `#if !Xcode`, so
-   `swift build` compiles too. Xcode defines the `Xcode` compilation condition, which is what keeps
-   the two from colliding — never remove that guard.
+`Localizable.xcstrings` is the single source of truth. Xcode 26 generates a
+`LocalizedStringResource` extension from its keys during the build.
 
 The symbol name is the key, lower-camel-cased:
 
@@ -27,18 +22,14 @@ The symbol name is the key, lower-camel-cased:
 | `Audio` | `.audio` |
 | `Change Audio Track` | `.changeAudioTrack` |
 
-Only `LocalizedStringResource` extensions are generated — **not** `LocalizedStringKey` and **not**
-`String.LocalizationValue`. So use APIs that accept a `LocalizedStringResource`:
+Use the generated symbols with APIs that accept `LocalizedStringResource`:
 
 ```swift
 Text(.subtitle)                       // ✅
 Button(.cancel, role: .cancel) { }    // ✅
 String(localized: .disable)           // ✅
-Text("Subtitle")                      // ❌ hard-coded, not localized
+Text("Subtitle")                     // ❌ bypasses the generated symbol
 ```
-
-This generation only happens under `xcodebuild`; the hand-written mirror is what makes
-`swift build` compile too.
 
 ## Steps
 
@@ -61,17 +52,10 @@ This generation only happens under `xcodebuild`; the hand-written mirror is what
 
    The `en` value is the key itself and is not repeated. `shouldTranslate: false` is used for
    pass-through keys like `%@`.
-2. Add the matching member to `swift/Sources/VLCPlayer/UI/LocalizedStrings.swift`:
-
-   ```swift
-   static var playbackSpeed: LocalizedStringResource { localizable("Playback Speed") }
-   ```
-
-3. Use `.playbackSpeed` in the view.
-4. Add the key to the `catalogKeysResolve` argument list in
+2. Use the generated `.playbackSpeed` symbol in the view.
+3. Add the key to the `catalogKeysResolve` argument list in
    `swift/Tests/VLCPlayerTests/LocalizationTests.swift` so a missing translation is caught by CI.
-5. Build both ways — `swift build` covers the hand-written mirror, `xcodebuild` the generated
-   symbols (`verify-build` skill). A key added to only one of them fails in the other.
+4. Build with Xcode 26 (`verify-build` skill) to generate and compile the symbol.
 
 ## Adding a language
 
@@ -82,9 +66,8 @@ already ships the catalog via `resources: [.process("UI/Resources")]`; `defaultL
 
 ## Troubleshooting
 
-- `type 'LocalizedStringResource' has no member 'x'` — key missing from the catalog, or built with
-  `swift build`, or the camel-cased name differs from what was assumed (check the generated file
-  under `.derivedData/.../DerivedSources/GeneratedStringSymbols_Localizable.swift`).
+- `type 'LocalizedStringResource' has no member 'x'` — ensure the key has Generate Swift Symbol
+  enabled in the catalog, then build with Xcode 26 rather than `swift build`.
 - Text shows the raw key at runtime — the key exists but has no translation for the active locale;
   falling back to the source language is expected behaviour.
 - Accessibility labels count as user-facing text: `PlayerTrackButton` passes the localized title to

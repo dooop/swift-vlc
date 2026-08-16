@@ -27,10 +27,11 @@ when the wrapper or both Android modules consume them.
 Use the `verify-build` skill for repository-wide changes, `verify-android` for Android-only work,
 and the Swift matrix in `verify-build` for Apple-only work.
 
-SwiftPM can compile with `swift build`, but `swift test` cannot load VLCKit from the test bundle.
-Run Swift tests with `xcodebuild`. Conditional code means Apple changes must build and test on macOS,
-iOS, and tvOS. Resolve destinations with `swift/Scripts/xcode-destination.sh`; do not hard-code
-simulator names.
+Validate the manifest with `swift package dump-package`, then build and test with Xcode 26 or newer.
+The package uses Xcode-generated string-catalog symbols, which the `swift build` CLI does not
+generate, and `swift test` cannot load VLCKit from the test bundle. Conditional code means Apple
+changes must build and test on macOS, iOS, and tvOS. Resolve destinations with
+`swift/Scripts/xcode-destination.sh`; do not hard-code simulator names.
 
 Android uses JDK 17, compile/target SDK 37, min SDK 23, and the checked-in wrapper. The baseline
 Android verification is:
@@ -52,9 +53,9 @@ Android verification is:
 - Format with `swift/.swift-format`; see `verify-build` for the exact command.
 
 Swift localization lives in
-`swift/Sources/VLCPlayer/UI/Resources/Localizable.xcstrings`. Every key is mirrored in
-`swift/Sources/VLCPlayer/UI/LocalizedStrings.swift` for plain SwiftPM and covered by
-`swift/Tests/VLCPlayerTests/LocalizationTests.swift`. Use the `add-localized-string` skill.
+`swift/Sources/VLCPlayer/UI/Resources/Localizable.xcstrings`. Xcode generates typed symbols for its
+keys, covered by `swift/Tests/VLCPlayerTests/LocalizationTests.swift`. Use the
+`add-localized-string` skill.
 
 ## Android rules
 

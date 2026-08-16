@@ -2,10 +2,8 @@
 //  LocalizationTests.swift
 //  vlc-player
 //
-//  Guards the String Catalog symbol generation: the `.audio`, `.cancel`, …
-//  members only exist because Xcode generates them from
-//  `UI/Resources/Localizable.xcstrings`. If that generation ever breaks, this
-//  file stops compiling — which is exactly the signal we want in CI.
+//  Guards the symbols Xcode generates from
+//  `UI/Resources/Localizable.xcstrings`.
 //
 
 import Foundation

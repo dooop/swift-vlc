@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Selects the Xcode used by every following step and fails early if it is too
-# old for this package (Swift 6 tools, iOS 18 / macOS 15 SDKs, String Catalog
+# old for this package (Swift 6 tools and reliable Swift Package String Catalog
 # symbol generation).
 #
 # Honours $XCODE_APP if set, otherwise keeps the runner image default.
@@ -26,8 +26,8 @@ xcodebuild -version
 swift --version
 
 xcode_major="$(xcodebuild -version | sed -n '1s/Xcode \([0-9]*\).*/\1/p')"
-if [[ -z "$xcode_major" || "$xcode_major" -lt 16 ]]; then
-  echo "::error::Xcode 16 or newer is required (found: $(xcodebuild -version | head -1))."
+if [[ -z "$xcode_major" || "$xcode_major" -lt 26 ]]; then
+  echo "::error::Xcode 26 or newer is required (found: $(xcodebuild -version | head -1))."
   exit 1
 fi
 

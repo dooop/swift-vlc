@@ -10,13 +10,13 @@ exactly which platform checks ran.
 
 ## Swift package checks
 
-`swift build` validates the SwiftPM path, including the hand-written localization symbol mirror.
-Do not run `swift test`: SwiftPM does not embed VLCKit in its xctest bundle. Use Xcode for executable
-tests and reuse `.derivedData` so the large binary targets resolve once.
+Validate the manifest with SwiftPM, but do not run `swift build`: the package intentionally uses
+Xcode-generated string-catalog symbols. Do not run `swift test` either, because SwiftPM does not
+embed VLCKit in its xctest bundle. Use Xcode 26 or newer for builds and executable tests, and reuse
+`.derivedData` so the large binary targets resolve once.
 
 ```bash
 swift package dump-package
-swift build
 
 for platform in macos ios tvos; do
   xcodebuild build -scheme vlc-player-Package \
