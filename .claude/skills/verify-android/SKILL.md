@@ -15,19 +15,27 @@ Use a focused command while iterating:
 ./gradlew :vlc-player:testDebugUnitTest
 ./gradlew :vlc-player:assembleDebug
 ./gradlew :vlc-player:lintDebug
-./gradlew :app:assembleDebug
+./gradlew :app:assembleLocalDebug
 ./gradlew ktlintCheck
 ```
 
 Before finishing an Android change, run the full CI-equivalent suite in one invocation:
 
 ```bash
-./gradlew :app:assembleDebug :vlc-player:assembleRelease \
+./gradlew :app:assembleLocalDebug :vlc-player:assembleRelease \
   :vlc-player:lintDebug :vlc-player:testDebugUnitTest ktlintCheck
 ```
 
 For release-specific version wiring, add `-PreleaseVersion=X.Y.Z` and confirm the AAR at
 `android/vlc-player/build/outputs/aar/vlc-player-release.aar`.
+
+`:app` has a `source` flavor dimension: `local` (default check above) builds against
+`project(":vlc-player")`, `maven` against the published `io.github.dooop:vlc-player` GitHub
+Packages artifact declared in `gradle/libs.versions.toml`. Only exercise the `maven` flavor
+(`./gradlew :app:assembleMavenDebug`) when specifically testing the published-artifact integration
+— it needs `read:packages` credentials (`gpr.user`/`gpr.key` in `~/.gradle/gradle.properties`, or
+the `GITHUB_ACTOR`/`GITHUB_TOKEN` environment variables) and network access, so it is not part of
+the standard local/CI loop.
 
 ## Diagnose failures
 

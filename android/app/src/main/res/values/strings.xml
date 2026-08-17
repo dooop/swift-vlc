@@ -3,6 +3,7 @@
     <string name="app_name">VLC Player Sample</string>
     <string name="sample_title">VLC Player</string>
     <string name="sample_description">Enter a direct media or stream URL. The sample URL is ready to play.</string>
+    <string name="sample_dependency_source">VLCPlayer source: %1$s</string>
     <string name="sample_url_label">Media URL</string>
     <string name="sample_url_error">Enter a complete HTTP(S), RTSP, RTMP, file, or content URI.</string>
     <string name="sample_play">Play with VLC</string>

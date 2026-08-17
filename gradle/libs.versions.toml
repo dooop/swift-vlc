@@ -7,6 +7,7 @@ lifecycle = "2.11.0"
 libvlc = "3.7.5"
 junit = "4.13.2"
 ktlint-gradle = "14.2.0"
+vlc-player-maven = "0.5.0"
 
 [libraries]
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
@@ -19,6 +20,7 @@ compose-tooling = { module = "androidx.compose.ui:ui-tooling" }
 lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 libvlc = { module = "org.videolan.android:libvlc-all", version.ref = "libvlc" }
 junit = { module = "junit:junit", version.ref = "junit" }
+vlc-player-maven = { module = "io.github.dooop:vlc-player", version.ref = "vlc-player-maven" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -19,6 +19,34 @@ dependencies {
 }
 ```
 
+## Testing the Maven integration in the sample app
+
+`app` has a `source` product flavor dimension so both dependency paths can be built and installed
+side by side:
+
+- `local` (default) — `project(":vlc-player")`, no network or credentials required.
+- `maven` — the published `io.github.dooop:vlc-player` artifact from GitHub Packages, version
+  pinned in `gradle/libs.versions.toml` (`vlc-player-maven`). Installs alongside `local` under a
+  `.maven` applicationId suffix. The running app shows which source is active.
+
+The `maven` flavor needs a GitHub personal access token with `read:packages`, since GitHub Packages
+requires authentication even for public repositories. Put it in the user-level
+`~/.gradle/gradle.properties` (never commit it):
+
+```properties
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.key=YOUR_GITHUB_TOKEN
+```
+
+`GITHUB_ACTOR`/`GITHUB_TOKEN` environment variables work as a fallback.
+
+```bash
+./gradlew :app:assembleLocalDebug :app:assembleMavenDebug
+```
+
+To bump the tested version after a new release, update `vlc-player-maven` in
+`gradle/libs.versions.toml`.
+
 ## Compose usage
 
 ```kotlin

@@ -19,8 +19,29 @@ android {
         versionName = "1.0"
     }
 
+    // Lets the sample app be built and installed against either the local
+    // :vlc-player project or the published GitHub Packages artifact, to test
+    // that Maven publishing produces a working, self-contained dependency.
+    flavorDimensions += "source"
+    productFlavors {
+        create("local") {
+            dimension = "source"
+            buildConfigField("String", "DEPENDENCY_SOURCE", "\"project(:vlc-player)\"")
+        }
+        create("maven") {
+            dimension = "source"
+            applicationIdSuffix = ".maven"
+            buildConfigField(
+                "String",
+                "DEPENDENCY_SOURCE",
+                "\"io.github.dooop:vlc-player:${libs.versions.vlc.player.maven.get()}\"",
+            )
+        }
+    }
+
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     compileOptions {
@@ -40,6 +61,7 @@ ktlint {
 }
 
 dependencies {
-    implementation(project(":vlc-player"))
+    "localImplementation"(project(":vlc-player"))
+    "mavenImplementation"(libs.vlc.player.maven)
     implementation(libs.activity.compose)
 }

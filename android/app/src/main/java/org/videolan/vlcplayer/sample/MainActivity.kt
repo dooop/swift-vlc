@@ -84,6 +84,10 @@ private fun VLCPlayerSampleApp() {
                     text = stringResource(R.string.sample_description),
                     style = MaterialTheme.typography.bodyLarge,
                 )
+                Text(
+                    text = stringResource(R.string.sample_dependency_source, BuildConfig.DEPENDENCY_SOURCE),
+                    style = MaterialTheme.typography.bodySmall,
+                )
                 OutlinedTextField(
                     value = urlText,
                     onValueChange = {

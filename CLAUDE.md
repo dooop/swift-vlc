@@ -33,11 +33,14 @@ generate, and `swift test` cannot load VLCKit from the test bundle. Conditional 
 changes must build and test on macOS, iOS, and tvOS. Resolve destinations with
 `swift/Scripts/xcode-destination.sh`; do not hard-code simulator names.
 
-Android uses JDK 17, compile/target SDK 37, min SDK 23, and the checked-in wrapper. The baseline
-Android verification is:
+Android uses JDK 17, compile/target SDK 37, min SDK 23, and the checked-in wrapper. `:app` has a
+`source` flavor dimension (`local` builds against `project(":vlc-player")`, `maven` against the
+published `io.github.dooop:vlc-player` GitHub Packages artifact); the `maven` flavor needs
+`read:packages` credentials (`gpr.user`/`gpr.key` in `~/.gradle/gradle.properties`, or
+`GITHUB_ACTOR`/`GITHUB_TOKEN`). The baseline Android verification is:
 
 ```bash
-./gradlew :app:assembleDebug :vlc-player:assembleRelease \
+./gradlew :app:assembleLocalDebug :vlc-player:assembleRelease \
   :vlc-player:lintDebug :vlc-player:testDebugUnitTest ktlintCheck
 ```
 
